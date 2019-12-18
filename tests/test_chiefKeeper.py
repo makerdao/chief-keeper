@@ -39,9 +39,6 @@ from tests.test_auctions import create_debt, check_active_auctions, max_dart, si
 from tests.test_dss import mint_mkr, wrap_eth, frob, set_collateral_price
 
 
-
-
-
 def time_travel_by(web3: Web3, seconds: int):
     assert(isinstance(web3, Web3))
     assert(isinstance(seconds, int))
@@ -64,3 +61,19 @@ def print_out(testName: str):
 
 
 class TestChiefKeeper:
+    def test_setup(self, mcd: DssDeployment, keeper: ChiefKeeper, our_address: Address):
+        
+    def test_check_deployment(self, mcd: DssDeployment, keeper: ChiefKeeper):
+        print_out("test_check_deployment")
+        keeper.check_deployment()
+
+    def test_unpack_slate(self, mcd: DssDeployment, keeper: ChiefKeeper, our_address: Address):
+
+
+    def test_query_yays(self, mcd: DssDeployment, keeper: ChiefKeeper):
+
+    def test_get_yays(self, mcd: DssDeployment, keeper: ChiefKeeper):
+
+    def test_update_yays(self, mcd: DssDeployment, keeper: ChiefKeeper):
+
+    def test_check_hat(self, mcd: DssDeployment, keeper: ChiefKeeper):
