@@ -25,8 +25,8 @@ import os
 from typing import List
 
 from tinydb import TinyDB, Query
-
 from web3 import Web3, HTTPProvider
+
 
 
 from pymaker import Address, Contract
@@ -180,7 +180,7 @@ class ChiefKeeper:
         self.logger.info('Querying Yays in DS-Chief since last update ( ! Could take up to 15 minutes ! )')
 
         basepath = os.path.dirname(__file__)
-        filepath = os.path.abspath(os.path.join(basepath, "yays_db_"+self.arguments.network+".json"))
+        filepath = os.path.abspath(os.path.join(basepath, "db_"+self.arguments.network+".json"))
 
         if os.path.isfile(filepath) and os.access(filepath, os.R_OK):
         # checks if file exists
@@ -191,7 +191,7 @@ class ChiefKeeper:
             self.db = TinyDB(filepath)
 
             blockNumber = self.web3.eth.blockNumber
-            self.db.insert({'last_blockNumber_checked': blockNumber})
+            self.db.insert({'last_block_checked_for_yays': blockNumber})
 
             yays = self.get_yays(self.deployment_block, blockNumber)
             self.db.insert({'yays': yays})
@@ -209,20 +209,13 @@ class ChiefKeeper:
             self.check_eta()
 
 
-    def get_eta_inUnix(self, spell: DSSSpell):
-        eta = spell.eta()
-        etaInUnix = eta.replace(tzinfo=timezone.utc).timestamp()
-
-        return etaInUnix
-
-
     def check_eta(self):
         blockNumber = self.web3.eth.blockNumber
         now = self.web3.eth.getBlock(blockNumber).timestamp
         self.logger.info(f'Checking scheduled spells on block {blockNumber}')
 
-        self.update_db_etas()
-        etas = self.db.get(doc_id=3)["etas"]
+        self.update_db_etas(blocknumber)
+        etas = self.db.get(doc_id=3)["upcoming_etas"]
 
         yays = list(etas.keys())
 
@@ -269,8 +262,6 @@ class ChiefKeeper:
                 eta = self.get_eta_inUnix(spell)
                 now = self.web3.eth.getBlock(blockNumber).timestamp
 
-                self.update_db_etas(spell.address, eta)
-
                 if eta == 0:
                     spell.schedule().transact(gas_price=self.gas_price())
 
@@ -278,13 +269,24 @@ class ChiefKeeper:
             self.logger.info(f'Current hat ({hat}) with Approvals {hatApprovals}')
 
 
+    def get_eta_inUnix(self, spell: DSSSpell):
+        eta = spell.eta()
+        etaInUnix = eta.replace(tzinfo=timezone.utc).timestamp()
+
+        return etaInUnix
 
 
-    def update_db_etas(self, address: Address, etaInUnix: int):
+    def update_db_etas(self, blockNumber: int):
         """ Add yays with etas that have yet to be passed """
+        yays = self.db.get(doc_id=2)["yays"]
+        etas = get_etas(yays, blockNumber)
+
+        self.db.update({'upcoming_etas': etas}, doc_ids=[3])
+
 
 
     def get_etas(self, yays, blockNumber: int):
+        """ Get all etas that are scheduled in the future """
         etas = {}
         for yay in yays:
 
@@ -301,12 +303,12 @@ class ChiefKeeper:
 
     def update_db_yays(self, currentBlockNumber: int):
 
-        DBblockNumber = self.db.get(doc_id=1)["last_blockNumber_checked"]
+        DBblockNumber = self.db.get(doc_id=1)["last_block_checked_for_yays"]
         newYays = self.get_yays(DBblockNumber,currentBlockNumber)
         oldYays = self.db.get(doc_id=2)["yays"]
 
         self.db.update({'yays': oldYays + newYays}, doc_ids=[2])
-        self.db.update({'last_blockNumber_checked': currentBlockNumber}, doc_ids=[1])
+        self.db.update({'last_block_checked_for_yays': currentBlockNumber}, doc_ids=[1])
 
 
 
