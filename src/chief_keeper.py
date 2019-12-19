@@ -27,7 +27,8 @@ from typing import List
 from tinydb import TinyDB, Query
 from web3 import Web3, HTTPProvider
 
-
+from src.database import SimpleDatabase
+from src.spell import DSSSpell
 
 from pymaker import Address, Contract
 from pymaker.util import is_contract_at
@@ -39,49 +40,6 @@ from pymaker.numeric import Wad, Rad, Ray
 from pymaker.token import ERC20Token
 from pymaker.deployment import DssDeployment
 from pymaker.dss import Ilk, Urn
-
-class DSSSpell(Contract):
-    """A client for the `DSPause` contract, which schedules function calls after a predefined delay.
-
-    You can find the source code of the `DSSSpell` contract here:
-
-    Attributes:
-        web3: An instance of `Web` from `web3.py`.
-        address: Ethereum address of the `DSSSpell` contract.
-    """
-
-    # This ABI and BIN was used from the Mcd Ilk Line Spell
-    # https://etherscan.io/address/0x3438Ae150d4De7F356251675B40B9863d4FD97F0
-    abi = Contract._load_abi(__name__, 'abi/McdIlkLineSpell.abi')
-    bin = Contract._load_bin(__name__, 'abi/McdIlkLineSpell.bin')
-
-    def __init__(self, web3: Web3, address: Address):
-        assert (isinstance(web3, Web3))
-        assert (isinstance(address, Address))
-
-        self.web3 = web3
-        self.address = address
-        self._contract = self._get_contract(web3, self.abi, address)
-
-    def done(self) -> bool:
-        return self._contract.call().done()
-
-    def eta(self) -> datetime:
-        try:
-            timestamp = self._contract.call().eta()
-        except ValueError:
-            timestamp = 0
-
-        return datetime.utcfromtimestamp(timestamp)
-
-    def deploy(self, web3: Web3):
-        return DSSSpell(web3=web3, address=Contract._deploy(web3, McdIlkLineSpell.abi, McdIlkLineSpell.bin, []))
-
-    def schedule(self):
-        return Transact(self, self.web3, self.abi, self.address, self._contract, 'schedule', [])
-
-    def cast(self):
-        return Transact(self, self.web3, self.abi, self.address, self._contract, 'cast', [])
 
 
 class ChiefKeeper:
@@ -179,25 +137,8 @@ class ChiefKeeper:
         self.logger.info('')
         self.logger.info('Querying Yays in DS-Chief since last update ( ! Could take up to 15 minutes ! )')
 
-        basepath = os.path.dirname(__file__)
-        filepath = os.path.abspath(os.path.join(basepath, "db_"+self.arguments.network+".json"))
+        self.database = SimpleDatabase()
 
-        if os.path.isfile(filepath) and os.access(filepath, os.R_OK):
-        # checks if file exists
-            self.logger.info("Simple database exists and is readable")
-            self.db = TinyDB(filepath)
-        else:
-            self.logger.info("Either file is missing or is not readable, creating simple database")
-            self.db = TinyDB(filepath)
-
-            blockNumber = self.web3.eth.blockNumber
-            self.db.insert({'last_block_checked_for_yays': blockNumber})
-
-            yays = self.get_yays(self.deployment_block, blockNumber)
-            self.db.insert({'yays': yays})
-
-            etas = self.get_etas(yays, blockNumber)
-            self.db.insert({'upcoming_etas': etas})
 
 
     def process_block(self):
@@ -214,8 +155,8 @@ class ChiefKeeper:
         now = self.web3.eth.getBlock(blockNumber).timestamp
         self.logger.info(f'Checking scheduled spells on block {blockNumber}')
 
-        self.update_db_etas(blocknumber)
-        etas = self.db.get(doc_id=3)["upcoming_etas"]
+        self.database.update_db_etas(blocknumber)
+        etas = self.database.db.get(doc_id=3)["upcoming_etas"]
 
         yays = list(etas.keys())
 
@@ -228,7 +169,7 @@ class ChiefKeeper:
 
                 del etas[key]
 
-        self.db.update({'etas': etas}, doc_ids=[3])
+        self.database.db.update({'etas': etas}, doc_ids=[3])
 
 
 
@@ -237,8 +178,8 @@ class ChiefKeeper:
         blockNumber = self.web3.eth.blockNumber
         self.logger.info(f'Checking Hat on block {blockNumber}')
 
-        self.update_db_yays(blockNumber)
-        yays = self.db.get(doc_id=2)["yays"]
+        self.database.update_db_yays(blockNumber)
+        yays = self.database.db.get(doc_id=2)["yays"]
 
         hat = self.dss.ds_chief.get_hat().address
         hatApprovals = self.dss.ds_chief.get_approvals(hat)
@@ -259,7 +200,7 @@ class ChiefKeeper:
             spell = DSSSpell(self.web3, Address(contender))
 
             if spell.done() == False:
-                eta = self.get_eta_inUnix(spell)
+                eta = self.database.get_eta_inUnix(spell)
                 now = self.web3.eth.getBlock(blockNumber).timestamp
 
                 if eta == 0:
@@ -267,86 +208,6 @@ class ChiefKeeper:
 
         else:
             self.logger.info(f'Current hat ({hat}) with Approvals {hatApprovals}')
-
-
-    def get_eta_inUnix(self, spell: DSSSpell):
-        eta = spell.eta()
-        etaInUnix = eta.replace(tzinfo=timezone.utc).timestamp()
-
-        return etaInUnix
-
-
-    def update_db_etas(self, blockNumber: int):
-        """ Add yays with etas that have yet to be passed """
-        yays = self.db.get(doc_id=2)["yays"]
-        etas = get_etas(yays, blockNumber)
-
-        self.db.update({'upcoming_etas': etas}, doc_ids=[3])
-
-
-
-    def get_etas(self, yays, blockNumber: int):
-        """ Get all etas that are scheduled in the future """
-        etas = {}
-        for yay in yays:
-
-            #Check if yay is an address to an EOA or a contract
-            if is_contract_at(self.web3, Address(yay)):
-                spell = DSSSpell(self.web3, Address(yay))
-                eta = self.get_eta_inUnix(spell)
-
-                if eta > self.web3.eth.getBlock(blockNumber).timestamp:
-                    etas[spell.address] = eta
-
-        return etas
-
-
-    def update_db_yays(self, currentBlockNumber: int):
-
-        DBblockNumber = self.db.get(doc_id=1)["last_block_checked_for_yays"]
-        newYays = self.get_yays(DBblockNumber,currentBlockNumber)
-        oldYays = self.db.get(doc_id=2)["yays"]
-
-        self.db.update({'yays': oldYays + newYays}, doc_ids=[2])
-        self.db.update({'last_block_checked_for_yays': currentBlockNumber}, doc_ids=[1])
-
-
-
-
-
-    def get_yays(self, beginBlock: int, endBlock: int):
-
-        etches = self.dss.ds_chief.past_etch_in_range(beginBlock, endBlock)
-        maxYays = self.dss.ds_chief.get_max_yays()
-
-        yays = []
-        for etch in etches:
-            yays = yays + self.unpack_slate(etch.slate, maxYays)
-
-        yays = list(dict.fromkeys(yays))
-
-        return yays if not None else []
-
-    # inspiration -> https://github.com/makerdao/dai-plugin-governance/blob/master/src/ChiefService.js#L153
-    # Fix
-    # def unpack_slate(self, slate, i = 0):
-    #     try:
-    #         return [self.dss.ds_chief.get_yay(slate, i)].extend(
-    #             self.unpack_slate(slate, i + 1))
-    #     except:
-    #         return []
-
-    def unpack_slate(self, slate, maxYays: int):
-        yays = []
-
-        for i in range(0, maxYays):
-            try:
-                yay = [self.dss.ds_chief.get_yay(slate,i)]
-            except ValueError:
-                break
-            yays = yays + yay
-
-        return yays
 
 
 
