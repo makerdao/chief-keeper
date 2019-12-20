@@ -39,6 +39,7 @@ from pymaker.shutdown import ShutdownModule, End
 
 from tests.test_auctions import create_debt, check_active_auctions, max_dart, simulate_bite
 from tests.test_dss import mint_mkr, wrap_eth, frob, set_collateral_price
+from tests.test_database import verify, print_out
 
 
 def time_travel_by(web3: Web3, seconds: int):
@@ -56,54 +57,38 @@ def time_travel_by(web3: Web3, seconds: int):
         web3.manager.request_blocking("evm_mine", [])
 
 
-def print_out(testName: str):
-    print("")
-    print(f"{testName}")
-    print("")
 
+global_spell;
 
 class TestChiefKeeper:
 
-    #TODO: Compartmentalize logic in pymaker/test_governance.py and import
-    def test_setup(self, mcd: DssDeployment, keeper: ChiefKeeper, our_address: Address, guy_address: Address):
+    def test_check_deployment(self, mcd: DssDeployment, keeper: ChiefKeeper):
+        print_out("test_check_deployment")
+        keeper.check_deployment()
 
-        amount = Wad.from_number(1000)
-        mint_mkr(mcd.mkr, our_address, amount)
-        assert mcd.mkr.balance_of(our_address) == amount
 
-        guyAmount = Wad.from_number(2000)
-        mint_mkr(mcd.mkr, guy_address, guyAmount)
-        assert mcd.mkr.balance_of(guy_address) == guyAmount
+    def test_check_eta(self, mcd: DssDeployment, keeper: ChiefKeeper):
+        print_out("test_check_eta")
 
-        # Lock MKR in DS-Chief
-        assert mcd.mkr.approve(mcd.ds_chief.address).transact(from_address=our_address)
-        assert mcd.mkr.approve(mcd.ds_chief.address).transact(from_address=guy_address)
-        assert mcd.ds_chief.lock(amount).transact(from_address=our_address)
-        assert mcd.ds_chief.lock(guyAmount).transact(from_address=our_address)
+        etas = keeper.database.db.get(doc_id=2)['upcoming_etas']
+        hat = mcd.ds_chief.get_hat()
+        verify([hat.address], etas, 1)
 
-        # Deploy spell
+        keeper.check_eta()
+
+        # Confirm that the spell was casted and that the database was updated
+        assert DSSSpell(mcd.web3, Address(hat)).done() == True
+        etas = keeper.database.db.get(doc_id=2)['upcoming_etas']
+        verify([], etas, 0)
+
+
+    def test_check_hat(self, mcd: DssDeployment, keeper: ChiefKeeper, guy_address: Address):
+        print_out("test_check_hat")
+
         self.spell = DSSSpell.deploy(mcd.web3, mcd.pause.address)
-
-        # Vote for our address
-        assert mcd.ds_chief.vote_yays([our_address.address, self.spell.address]).transact(from_address=our_address)
         assert mcd.ds_chief.vote_yays([self.spell.address]).transact(from_address=guy_address)
 
-        # At this point there are two yays in the chief, one to our_address and the other to the spell address
+        keeper.check_hat()
 
-
-
-    #
-    # def test_unpack_slate(self, mcd: DssDeployment, keeper: ChiefKeeper, our_address: Address):
-    #
-    #
-    # def test_query_yays(self, mcd: DssDeployment, keeper: ChiefKeeper):
-    #
-    # def test_get_yays(self, mcd: DssDeployment, keeper: ChiefKeeper):
-    #
-    # def test_update_yays(self, mcd: DssDeployment, keeper: ChiefKeeper):
-    #
-    # def test_check_deployment(self, mcd: DssDeployment, keeper: ChiefKeeper):
-    #     print_out("test_check_deployment")
-    #     keeper.check_deployment()
-    #
-    # def test_check_hat(self, mcd: DssDeployment, keeper: ChiefKeeper):
+        # Confirm that the spell was scheduled
+        assert self.spell.eta() != 0

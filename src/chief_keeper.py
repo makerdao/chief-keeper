@@ -155,29 +155,6 @@ class ChiefKeeper:
             self.check_eta()
 
 
-    def check_eta(self):
-        blockNumber = self.web3.eth.blockNumber
-        now = self.web3.eth.getBlock(blockNumber).timestamp
-        self.logger.info(f'Checking scheduled spells on block {blockNumber}')
-
-        self.database.update_db_etas(blockNumber)
-        etas = self.database.db.get(doc_id=3)["upcoming_etas"]
-
-        yays = list(etas.keys())
-
-        for yay in yays:
-            if etas[yay] < now:
-                spell = DSSSpell(self.web3, Address(yay))
-
-                if spell.done() == False:
-                    spell.cast().transact(gas_price=self.gas_price())
-
-                del etas[key]
-
-        self.database.db.update({'upcoming_etas': etas}, doc_ids=[3])
-
-
-
 
     def check_hat(self):
         blockNumber = self.web3.eth.blockNumber
@@ -213,6 +190,28 @@ class ChiefKeeper:
 
         else:
             self.logger.info(f'Current hat ({hat}) with Approvals {hatApprovals}')
+
+
+    def check_eta(self):
+        blockNumber = self.web3.eth.blockNumber
+        now = self.web3.eth.getBlock(blockNumber).timestamp
+        self.logger.info(f'Checking scheduled spells on block {blockNumber}')
+
+        self.database.update_db_etas(blockNumber)
+        etas = self.database.db.get(doc_id=3)["upcoming_etas"]
+
+        yays = list(etas.keys())
+
+        for yay in yays:
+            if etas[yay] <= now:
+                spell = DSSSpell(self.web3, Address(yay))
+
+                if spell.done() == False:
+                    spell.cast().transact(gas_price=self.gas_price())
+
+                del etas[key]
+
+        self.database.db.update({'upcoming_etas': etas}, doc_ids=[3])
 
 
 

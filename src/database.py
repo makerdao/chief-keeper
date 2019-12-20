@@ -73,7 +73,7 @@ class SimpleDatabase:
         return result
 
 
-    def get_eta_inUnix(self, spell: DSSSpell):
+    def get_eta_inUnix(self, spell: DSSSpell) -> int:
         eta = spell.eta()
         etaInUnix = eta.replace(tzinfo=timezone.utc).timestamp()
 
@@ -97,7 +97,7 @@ class SimpleDatabase:
                 spell = DSSSpell(self.web3, Address(yay))
                 eta = self.get_eta_inUnix(spell)
 
-                if eta > self.web3.eth.getBlock(blockNumber).timestamp:
+                if eta >= self.web3.eth.getBlock(blockNumber).timestamp:
                     etas[spell.address] = eta
 
         return etas
@@ -136,7 +136,7 @@ class SimpleDatabase:
     #     except:
     #         return []
 
-    def unpack_slate(self, slate, maxYays: int):
+    def unpack_slate(self, slate, maxYays: int) -> List:
         yays = []
 
         for i in range(0, maxYays):

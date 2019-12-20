@@ -111,6 +111,13 @@ def keeper(mcd: DssDeployment, keeper_address: Address) -> ChiefKeeper:
     assert isinstance(keeper, ChiefKeeper)
     return keeper
 
+@pytest.fixture(scope="session")
+def simpledb(web3: Web3, mcd: DssDeployment) -> SimpleDatabase:
+    simpledb = SimpleDatabase(web3, 0, "testnet", mcd)
+    assert isinstance(keeper, SimpleDatabase)
+    return simpledb
+
+
 def args(arguments: str) -> list:
     return arguments.split()
 
