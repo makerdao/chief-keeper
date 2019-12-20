@@ -27,6 +27,8 @@ from typing import List
 from tinydb import TinyDB, Query
 from web3 import Web3, HTTPProvider
 
+from src.spell import DSSSpell
+
 from pymaker import Address, Contract
 from pymaker.util import is_contract_at
 from pymaker.gas import DefaultGasPrice, FixedGasPrice
@@ -40,17 +42,23 @@ from pymaker.dss import Ilk, Urn
 
 
 class SimpleDatabase:
-    def __init__():
+    def __init__(self, web3: Web3, block: int, network: str, deployment: DssDeployment):
+        self.web3 = web3
+        self.deployment_block = block
+        self.network = network
+        self.dss = deployment
 
+
+    def create(self):
         basepath = os.path.dirname(__file__)
-        filepath = os.path.abspath(os.path.join(basepath, "db_"+self.arguments.network+".json"))
+        filepath = os.path.abspath(os.path.join(basepath, "db_"+self.network+".json"))
 
         if os.path.isfile(filepath) and os.access(filepath, os.R_OK):
         # checks if file exists
-            self.logger.info("Simple database exists and is readable")
+            result = "Simple database exists and is readable"
             self.db = TinyDB(filepath)
         else:
-            self.logger.info("Either file is missing or is not readable, creating simple database")
+            result = "Either file is missing or is not readable, creating simple database"
             self.db = TinyDB(filepath)
 
             blockNumber = self.web3.eth.blockNumber
@@ -62,6 +70,8 @@ class SimpleDatabase:
             etas = self.get_etas(yays, blockNumber)
             self.db.insert({'upcoming_etas': etas})
 
+        return result
+
 
     def get_eta_inUnix(self, spell: DSSSpell):
         eta = spell.eta()
@@ -72,7 +82,7 @@ class SimpleDatabase:
     def update_db_etas(self, blockNumber: int):
         """ Add yays with etas that have yet to be passed """
         yays = self.db.get(doc_id=2)["yays"]
-        etas = get_etas(yays, blockNumber)
+        etas = self.get_etas(yays, blockNumber)
 
         self.db.update({'upcoming_etas': etas}, doc_ids=[3])
 

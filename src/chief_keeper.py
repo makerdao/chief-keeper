@@ -24,11 +24,11 @@ import types
 import os
 from typing import List
 
-from tinydb import TinyDB, Query
 from web3 import Web3, HTTPProvider
 
 from src.database import SimpleDatabase
 from src.spell import DSSSpell
+from src.testClass import ModelFactory
 
 from pymaker import Address, Contract
 from pymaker.util import is_contract_at
@@ -137,8 +137,13 @@ class ChiefKeeper:
         self.logger.info('')
         self.logger.info('Querying Yays in DS-Chief since last update ( ! Could take up to 15 minutes ! )')
 
-        self.database = SimpleDatabase()
+        self.database = SimpleDatabase(self.web3,
+                                       self.deployment_block,
+                                       self.arguments.network,
+                                       self.dss)
+        result = self.database.create()
 
+        self.logger.info(result)
 
 
     def process_block(self):
@@ -155,7 +160,7 @@ class ChiefKeeper:
         now = self.web3.eth.getBlock(blockNumber).timestamp
         self.logger.info(f'Checking scheduled spells on block {blockNumber}')
 
-        self.database.update_db_etas(blocknumber)
+        self.database.update_db_etas(blockNumber)
         etas = self.database.db.get(doc_id=3)["upcoming_etas"]
 
         yays = list(etas.keys())
@@ -169,7 +174,7 @@ class ChiefKeeper:
 
                 del etas[key]
 
-        self.database.db.update({'etas': etas}, doc_ids=[3])
+        self.database.db.update({'upcoming_etas': etas}, doc_ids=[3])
 
 
 

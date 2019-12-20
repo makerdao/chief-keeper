@@ -24,10 +24,7 @@ import types
 import os
 from typing import List
 
-from tinydb import TinyDB, Query
 from web3 import Web3, HTTPProvider
-
-from src.database import SimpleDatabase
 
 from pymaker import Address, Contract
 from pymaker.util import is_contract_at
@@ -50,8 +47,7 @@ class DSSSpell(Contract):
         address: Ethereum address of the `DSSSpell` contract.
     """
 
-    # This ABI and BIN was used from the Mcd Ilk Line Spell
-    # https://etherscan.io/address/0x3438Ae150d4De7F356251675B40B9863d4FD97F0
+    # This ABI and BIN was used from the McdIlkLineSpell.sol
     abi = Contract._load_abi(__name__, 'abi/McdIlkLineSpell.abi')
     bin = Contract._load_bin(__name__, 'abi/McdIlkLineSpell.bin')
 
@@ -74,8 +70,8 @@ class DSSSpell(Contract):
 
         return datetime.utcfromtimestamp(timestamp)
 
-    def deploy(self, web3: Web3):
-        return DSSSpell(web3=web3, address=Contract._deploy(web3, McdIlkLineSpell.abi, McdIlkLineSpell.bin, []))
+    def deploy(self, web3: Web3, pauseAddress: Address):
+        return DSSSpell(web3=web3, address=Contract._deploy(web3, McdIlkLineSpell.abi, McdIlkLineSpell.bin, [pauseAddress.address]))
 
     def schedule(self):
         return Transact(self, self.web3, self.abi, self.address, self._contract, 'schedule', [])

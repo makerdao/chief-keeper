@@ -23,9 +23,11 @@ import time
 from typing import List
 import logging
 
+from tinydb import TinyDB, Query
 from web3 import Web3
 
-from src.cage_keeper import CageKeeper
+from src.chief_keeper import ChiefKeeper
+from src.spell import DSSSpell
 
 from pymaker import Address
 from pymaker.approval import directly, hope_directly
@@ -61,19 +63,47 @@ def print_out(testName: str):
 
 
 class TestChiefKeeper:
-    def test_setup(self, mcd: DssDeployment, keeper: ChiefKeeper, our_address: Address):
-        
-    def test_check_deployment(self, mcd: DssDeployment, keeper: ChiefKeeper):
-        print_out("test_check_deployment")
-        keeper.check_deployment()
 
-    def test_unpack_slate(self, mcd: DssDeployment, keeper: ChiefKeeper, our_address: Address):
+    #TODO: Compartmentalize logic in pymaker/test_governance.py and import
+    def test_setup(self, mcd: DssDeployment, keeper: ChiefKeeper, our_address: Address, guy_address: Address):
+
+        amount = Wad.from_number(1000)
+        mint_mkr(mcd.mkr, our_address, amount)
+        assert mcd.mkr.balance_of(our_address) == amount
+
+        guyAmount = Wad.from_number(2000)
+        mint_mkr(mcd.mkr, guy_address, guyAmount)
+        assert mcd.mkr.balance_of(guy_address) == guyAmount
+
+        # Lock MKR in DS-Chief
+        assert mcd.mkr.approve(mcd.ds_chief.address).transact(from_address=our_address)
+        assert mcd.mkr.approve(mcd.ds_chief.address).transact(from_address=guy_address)
+        assert mcd.ds_chief.lock(amount).transact(from_address=our_address)
+        assert mcd.ds_chief.lock(guyAmount).transact(from_address=our_address)
+
+        # Deploy spell
+        self.spell = DSSSpell.deploy(mcd.web3, mcd.pause.address)
+
+        # Vote for our address
+        assert mcd.ds_chief.vote_yays([our_address.address, self.spell.address]).transact(from_address=our_address)
+        assert mcd.ds_chief.vote_yays([self.spell.address]).transact(from_address=guy_address)
+
+        # At this point there are two yays in the chief, one to our_address and the other to the spell address
 
 
-    def test_query_yays(self, mcd: DssDeployment, keeper: ChiefKeeper):
 
-    def test_get_yays(self, mcd: DssDeployment, keeper: ChiefKeeper):
-
-    def test_update_yays(self, mcd: DssDeployment, keeper: ChiefKeeper):
-
-    def test_check_hat(self, mcd: DssDeployment, keeper: ChiefKeeper):
+    #
+    # def test_unpack_slate(self, mcd: DssDeployment, keeper: ChiefKeeper, our_address: Address):
+    #
+    #
+    # def test_query_yays(self, mcd: DssDeployment, keeper: ChiefKeeper):
+    #
+    # def test_get_yays(self, mcd: DssDeployment, keeper: ChiefKeeper):
+    #
+    # def test_update_yays(self, mcd: DssDeployment, keeper: ChiefKeeper):
+    #
+    # def test_check_deployment(self, mcd: DssDeployment, keeper: ChiefKeeper):
+    #     print_out("test_check_deployment")
+    #     keeper.check_deployment()
+    #
+    # def test_check_hat(self, mcd: DssDeployment, keeper: ChiefKeeper):
