@@ -28,7 +28,6 @@ from web3 import Web3, HTTPProvider
 
 from src.database import SimpleDatabase
 from src.spell import DSSSpell
-from src.testClass import ModelFactory
 
 from pymaker import Address, Contract
 from pymaker.util import is_contract_at

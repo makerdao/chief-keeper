@@ -31,6 +31,7 @@ git clone https://github.com/makerdao/chief-keeper.git
 cd chief-keeper
 git submodule update --init --recursive
 ./install.sh
+pip3 install tinydb
 ```
 
 For some known Ubuntu and macOS issues see the [pymaker](https://github.com/makerdao/pymaker) README.

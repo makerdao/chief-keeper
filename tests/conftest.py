@@ -29,6 +29,7 @@ from pymaker.shutdown import ShutdownModule, End
 from pymaker.keys import register_keys
 
 from src.chief_keeper import ChiefKeeper
+from src.database import SimpleDatabase
 
 
 @pytest.fixture(scope='session')

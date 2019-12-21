@@ -39,7 +39,7 @@ from pymaker.shutdown import ShutdownModule, End
 
 from tests.test_auctions import create_debt, check_active_auctions, max_dart, simulate_bite
 from tests.test_dss import mint_mkr, wrap_eth, frob, set_collateral_price
-from tests.test_database import verify, print_out
+
 
 
 def time_travel_by(web3: Web3, seconds: int):
@@ -56,9 +56,23 @@ def time_travel_by(web3: Web3, seconds: int):
         # force a block mining to have a correct timestamp in latest block
         web3.manager.request_blocking("evm_mine", [])
 
+def verify(addresses: List, listOrDict, leng: int):
+    assert(isinstance(addresses, List))
+    assert(isinstance(leng, int))
+
+    if type(listOrDict) is list:
+        assert len(list) == int
+    else:
+        assert len(list(listOrDict.keys())) == int
+
+    for addr in addresses:
+        assert addr in listOrDict
 
 
-global_spell;
+def print_out(testName: str):
+    print("")
+    print(f"{testName}")
+    print("")
 
 class TestChiefKeeper:
 

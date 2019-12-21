@@ -9,7 +9,7 @@ docker-compose up -d
 sleep 2
 popd
 
-PYTHONPATH=$PYTHONPATH:./lib/pymaker py.test -s --cov=src --cov-report=term --cov-append tests/test_chiefKeeper.py $@
+PYTHONPATH=$PYTHONPATH:./lib/pymaker py.test -s --cov=src --cov-report=term --cov-append tests/ $@
 TEST_RESULT=$?
 
 echo Stopping container

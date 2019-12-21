@@ -27,6 +27,7 @@ from tinydb import TinyDB, Query
 from web3 import Web3
 
 from src.spell import DSSSpell
+from src.database import SimpleDatabase
 
 from pymaker import Address
 from pymaker.approval import directly, hope_directly
@@ -73,7 +74,7 @@ def print_out(testName: str):
     print(f"{testName}")
     print("")
 
-global_spell;
+global_spell = "placeholder";
 
 class TestSimpleDatabase:
 
@@ -171,4 +172,3 @@ class TestSimpleDatabase:
         etas = simpledb.db.get(doc_id=2)['upcoming_etas']
 
         verify([global_spell.address], etas, 1)
-        
