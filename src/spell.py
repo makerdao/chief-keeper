@@ -26,16 +26,9 @@ from typing import List
 
 from web3 import Web3, HTTPProvider
 
-from pymaker import Address, Contract
+from pymaker import Address, Contract, Transact
 from pymaker.util import is_contract_at
-from pymaker.gas import DefaultGasPrice, FixedGasPrice
-from pymaker.auctions import Flipper, Flapper, Flopper
-from pymaker.keys import register_keys
-from pymaker.lifecycle import Lifecycle
 from pymaker.numeric import Wad, Rad, Ray
-from pymaker.token import ERC20Token
-from pymaker.deployment import DssDeployment
-from pymaker.dss import Ilk, Urn
 
 class DSSSpell(Contract):
     """A client for the `DSPause` contract, which schedules function calls after a predefined delay.
@@ -48,8 +41,8 @@ class DSSSpell(Contract):
     """
 
     # This ABI and BIN was used from the McdIlkLineSpell.sol
-    abi = Contract._load_abi(__name__, 'abi/McdIlkLineSpell.abi')
-    bin = Contract._load_bin(__name__, 'abi/McdIlkLineSpell.bin')
+    abi = Contract._load_abi(__name__, 'abi/DSSSpell.abi')
+    bin = Contract._load_bin(__name__, 'abi/DSSSpell.bin')
 
     def __init__(self, web3: Web3, address: Address):
         assert (isinstance(web3, Web3))
@@ -70,8 +63,9 @@ class DSSSpell(Contract):
 
         return datetime.utcfromtimestamp(timestamp)
 
-    def deploy(self, web3: Web3, pauseAddress: Address):
-        return DSSSpell(web3=web3, address=Contract._deploy(web3, McdIlkLineSpell.abi, McdIlkLineSpell.bin, [pauseAddress.address]))
+    @staticmethod
+    def deploy(web3: Web3, pauseAddress: Address):
+        return DSSSpell(web3=web3, address=Contract._deploy(web3, DSSSpell.abi, DSSSpell.bin, [pauseAddress.address]))
 
     def schedule(self):
         return Transact(self, self.web3, self.abi, self.address, self._contract, 'schedule', [])

@@ -61,9 +61,9 @@ def verify(addresses: List, listOrDict, leng: int):
     assert(isinstance(leng, int))
 
     if type(listOrDict) is list:
-        assert len(list) == int
+        assert len(listOrDict) == leng
     else:
-        assert len(list(listOrDict.keys())) == int
+        assert len(list(listOrDict.keys())) == leng
 
     for addr in addresses:
         assert addr in listOrDict
@@ -80,9 +80,11 @@ class TestChiefKeeper:
         print_out("test_check_deployment")
         keeper.check_deployment()
 
-
+    @pytest.mark.skip(reason="not fully implemented")
     def test_check_eta(self, mcd: DssDeployment, keeper: ChiefKeeper):
         print_out("test_check_eta")
+
+        keeper.initial_query()
 
         etas = keeper.database.db.get(doc_id=2)['upcoming_etas']
         hat = mcd.ds_chief.get_hat()
@@ -95,12 +97,12 @@ class TestChiefKeeper:
         etas = keeper.database.db.get(doc_id=2)['upcoming_etas']
         verify([], etas, 0)
 
-
+    @pytest.mark.skip(reason="not fully implemented")
     def test_check_hat(self, mcd: DssDeployment, keeper: ChiefKeeper, guy_address: Address):
         print_out("test_check_hat")
 
         self.spell = DSSSpell.deploy(mcd.web3, mcd.pause.address)
-        assert mcd.ds_chief.vote_yays([self.spell.address]).transact(from_address=guy_address)
+        assert mcd.ds_chief.vote_yays([self.spell.address.address]).transact(from_address=guy_address)
 
         keeper.check_hat()
 

@@ -61,10 +61,11 @@ def verify(addresses: List, listOrDict, leng: int):
     assert(isinstance(leng, int))
 
     if type(listOrDict) is list:
-        assert len(list) == int
+        assert len(listOrDict) == leng
     else:
-        assert len(list(listOrDict.keys())) == int
+        assert len(list(listOrDict.keys())) == leng
 
+    print(f'listOrDict {listOrDict}')
     for addr in addresses:
         assert addr in listOrDict
 
@@ -74,7 +75,7 @@ def print_out(testName: str):
     print(f"{testName}")
     print("")
 
-global_spell = "placeholder";
+pytest.global_spell = {};
 
 class TestSimpleDatabase:
 
@@ -94,41 +95,42 @@ class TestSimpleDatabase:
         assert mcd.mkr.approve(mcd.ds_chief.address).transact(from_address=our_address)
         assert mcd.mkr.approve(mcd.ds_chief.address).transact(from_address=guy_address)
         assert mcd.ds_chief.lock(amount).transact(from_address=our_address)
-        assert mcd.ds_chief.lock(guyAmount).transact(from_address=our_address)
+        assert mcd.ds_chief.lock(guyAmount).transact(from_address=guy_address)
 
         # Deploy spell
         self.spell = DSSSpell.deploy(mcd.web3, mcd.pause.address)
 
         # Vote for our address
         assert mcd.ds_chief.vote_yays([our_address.address, guy_address.address]).transact(from_address=our_address)
-        assert mcd.ds_chief.vote_yays([self.spell.address]).transact(from_address=guy_address)
+        assert mcd.ds_chief.vote_yays([self.spell.address.address]).transact(from_address=guy_address)
 
         # At this point there are two yays in the chief, one to our_address and the other to the spell address
 
-        global_spell = self.spell
+        pytest.global_spell = self.spell
 
 
-    def test_unpack_slate(self, mcd: DssDeployment, simpledb: SimpleDatabase, our_address: Address):
+    def test_unpack_slate(self, mcd: DssDeployment, simpledb: SimpleDatabase, our_address: Address, guy_address: Address):
         print_out("test_unpack_slate")
 
         # unpack the first etch
         etches = mcd.ds_chief.past_etch(3)
-        yays = simpledb.unpack_slate(etches[0], 3)
-        verify_address([our_address.address, guy_address.address], yays, 2)
+        yays = simpledb.unpack_slate(etches[0].slate, 3)
+        verify([our_address.address, guy_address.address], yays, 2)
 
 
     def test_get_yays(self, mcd: DssDeployment, simpledb: SimpleDatabase, our_address: Address,  guy_address: Address):
         print_out("test_get_yays")
 
         yays = simpledb.get_yays(0, mcd.web3.eth.blockNumber)
-        verify([our_address.address, guy_address.address, global_spell.address], yays, 3)
+        verify([our_address.address, guy_address.address, pytest.global_spell.address.address], yays, 3)
 
 
     def test_get_etas(self, mcd: DssDeployment, simpledb: SimpleDatabase, our_address: Address,  guy_address: Address):
         print_out("test_get_etas")
 
-        yays = simpledb.get_yays(0, mcd.web3.eth.blockNumber)
-        etas = simpledb.get_etas(yays, 0)
+        block = mcd.web3.eth.blockNumber
+        yays = simpledb.get_yays(0, block)
+        etas = simpledb.get_etas(yays, block)
 
         verify([], etas, 0)
 
@@ -141,7 +143,7 @@ class TestSimpleDatabase:
         yays = simpledb.db.get(doc_id=2)["yays"]
         etas = simpledb.db.get(doc_id=3)["upcoming_etas"]
 
-        verify([our_address.address, guy_address.address, global_spell.address], yays, 3)
+        verify([our_address.address, guy_address.address, pytest.global_spell.address.address], yays, 3)
         verify([], etas, 0)
 
 
@@ -152,23 +154,23 @@ class TestSimpleDatabase:
         block = mcd.web3.eth.blockNumber
 
         # Updated vote should not delete yays that have had approval history
-        simpledb.update_db_yays()
+        simpledb.update_db_yays(block)
         yays = simpledb.db.get(doc_id=2)["yays"]
-        DBblockNumber = self.db.get(doc_id=1)["last_block_checked_for_yays"]
+        DBblockNumber = simpledb.db.get(doc_id=1)["last_block_checked_for_yays"]
 
-        verify([our_address.address, guy_address.address, global_spell.address], yays, 3)
+        verify([our_address.address, guy_address.address, pytest.global_spell.address.address], yays, 3)
         assert DBblockNumber == block
 
 
     def test_etas_update(self, mcd: DssDeployment, simpledb: SimpleDatabase, our_address: Address,  guy_address: Address):
         print_out("test_yays_update")
 
-        assert mcd.ds_chief.lift(global_spell.address).transact(from_address=our_address)
-        assert global_spell.schedule().transact(from_address=our_address)
+        assert mcd.ds_chief.lift(pytest.global_spell.address).transact(from_address=our_address)
+        assert pytest.global_spell.schedule().transact(from_address=our_address)
         block = mcd.web3.eth.blockNumber
 
         # Although pause.delay is 0, uddate_db_etas also catches etas that can be casted on the next block
         simpledb.update_db_etas(block)
-        etas = simpledb.db.get(doc_id=2)['upcoming_etas']
+        etas = simpledb.db.get(doc_id=3)['upcoming_etas']
 
-        verify([global_spell.address], etas, 1)
+        verify([pytest.global_spell.address.address], etas, 1)

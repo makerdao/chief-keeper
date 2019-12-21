@@ -87,6 +87,7 @@ class SimpleDatabase:
         self.db.update({'upcoming_etas': etas}, doc_ids=[3])
 
 
+
     def get_etas(self, yays, blockNumber: int):
         """ Get all etas that are scheduled in the future """
         etas = {}
@@ -98,7 +99,7 @@ class SimpleDatabase:
                 eta = self.get_eta_inUnix(spell)
 
                 if eta >= self.web3.eth.getBlock(blockNumber).timestamp:
-                    etas[spell.address] = eta
+                    etas[spell.address.address] = eta
 
         return etas
 
@@ -106,10 +107,13 @@ class SimpleDatabase:
     def update_db_yays(self, currentBlockNumber: int):
 
         DBblockNumber = self.db.get(doc_id=1)["last_block_checked_for_yays"]
-        newYays = self.get_yays(DBblockNumber,currentBlockNumber)
+        currentYays = self.get_yays(DBblockNumber,currentBlockNumber)
         oldYays = self.db.get(doc_id=2)["yays"]
 
-        self.db.update({'yays': oldYays + newYays}, doc_ids=[2])
+        # Take out any duplicates
+        newYays = list(dict.fromkeys(oldYays + currentYays))
+
+        self.db.update({'yays': newYays}, doc_ids=[2])
         self.db.update({'last_block_checked_for_yays': currentBlockNumber}, doc_ids=[1])
 
 
@@ -122,8 +126,6 @@ class SimpleDatabase:
         yays = []
         for etch in etches:
             yays = yays + self.unpack_slate(etch.slate, maxYays)
-
-        yays = list(dict.fromkeys(yays))
 
         return yays if not None else []
 
