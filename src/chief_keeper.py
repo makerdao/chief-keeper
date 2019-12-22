@@ -208,7 +208,7 @@ class ChiefKeeper:
                 if spell.done() == False:
                     spell.cast().transact(gas_price=self.gas_price())
 
-                del etas[key]
+                del etas[yay]
 
         self.database.db.update({'upcoming_etas': etas}, doc_ids=[3])
 

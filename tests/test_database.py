@@ -98,7 +98,7 @@ class TestSimpleDatabase:
         assert mcd.ds_chief.lock(guyAmount).transact(from_address=guy_address)
 
         # Deploy spell
-        self.spell = DSSSpell.deploy(mcd.web3, mcd.pause.address)
+        self.spell = DSSSpell.deploy(mcd.web3, mcd.pause.address, mcd.vat.address)
 
         # Vote for our address
         assert mcd.ds_chief.vote_yays([our_address.address, guy_address.address]).transact(from_address=our_address)

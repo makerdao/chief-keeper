@@ -228,10 +228,14 @@ contract VatAbstract {
 /* import "lib/dss-interfaces/src/dapp/DSPauseAbstract.sol"; */
 
 contract SpellAction is DSMath {
-    address constant VAT = 0xbA987bDB501d131f766fEe8180Da5d81b34b69d9;
+    address public VAT;
 
     // not provided in DSMath
     uint constant RAD = 10 ** 45;
+
+    constructor(address vatAdd) public {
+      VAT = vatAdd
+    }
 
     function execute() public {
         uint256 newIlkLine = mul(0, RAD);
@@ -254,10 +258,10 @@ contract McdIlkLineSpell is DSMath {
     bytes           public sig;
     bool            public done;
 
-    constructor(address pauseAdd) public {
+    constructor(address pauseAdd, address vatAdd) public {
         pause = DSPauseAbstract(pauseAdd);
         sig = abi.encodeWithSignature("execute()");
-        action = address(new SpellAction());
+        action = address(new SpellAction(vatAdd));
         bytes32 _tag;
         address _action = action;
         assembly { _tag := extcodehash(_action) }

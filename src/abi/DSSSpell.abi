@@ -5,6 +5,11 @@
 				"internalType": "address",
 				"name": "pauseAdd",
 				"type": "address"
+			},
+			{
+				"internalType": "address",
+				"name": "vatAdd",
+				"type": "address"
 			}
 		],
 		"payable": false,

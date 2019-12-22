@@ -80,13 +80,12 @@ class TestChiefKeeper:
         print_out("test_check_deployment")
         keeper.check_deployment()
 
-    @pytest.mark.skip(reason="not fully implemented")
     def test_check_eta(self, mcd: DssDeployment, keeper: ChiefKeeper):
         print_out("test_check_eta")
 
         keeper.initial_query()
 
-        etas = keeper.database.db.get(doc_id=2)['upcoming_etas']
+        etas = keeper.database.db.get(doc_id=3)['upcoming_etas']
         hat = mcd.ds_chief.get_hat()
         verify([hat.address], etas, 1)
 
@@ -94,14 +93,14 @@ class TestChiefKeeper:
 
         # Confirm that the spell was casted and that the database was updated
         assert DSSSpell(mcd.web3, Address(hat)).done() == True
-        etas = keeper.database.db.get(doc_id=2)['upcoming_etas']
+        etas = keeper.database.db.get(doc_id=3)['upcoming_etas']
         verify([], etas, 0)
 
     @pytest.mark.skip(reason="not fully implemented")
     def test_check_hat(self, mcd: DssDeployment, keeper: ChiefKeeper, guy_address: Address):
         print_out("test_check_hat")
 
-        self.spell = DSSSpell.deploy(mcd.web3, mcd.pause.address)
+        self.spell = DSSSpell.deploy(mcd.web3, mcd.pause.address, mcd.vat.address)
         assert mcd.ds_chief.vote_yays([self.spell.address.address]).transact(from_address=guy_address)
 
         keeper.check_hat()

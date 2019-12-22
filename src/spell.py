@@ -64,8 +64,8 @@ class DSSSpell(Contract):
         return datetime.utcfromtimestamp(timestamp)
 
     @staticmethod
-    def deploy(web3: Web3, pauseAddress: Address):
-        return DSSSpell(web3=web3, address=Contract._deploy(web3, DSSSpell.abi, DSSSpell.bin, [pauseAddress.address]))
+    def deploy(web3: Web3, pauseAddress: Address, vatAddress: Address):
+        return DSSSpell(web3=web3, address=Contract._deploy(web3, DSSSpell.abi, DSSSpell.bin, [pauseAddress.address, vatAddress.address]))
 
     def schedule(self):
         return Transact(self, self.web3, self.abi, self.address, self._contract, 'schedule', [])
