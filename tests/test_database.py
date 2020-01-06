@@ -100,7 +100,8 @@ class TestSimpleDatabase:
         # Deploy spell
         self.spell = DSSSpell.deploy(mcd.web3, mcd.pause.address, mcd.vat.address)
 
-        # Vote for our address
+        # Vote 1000 mkr on our address and guy_address
+        # Vote 2000 mkr on global spell address
         assert mcd.ds_chief.vote_yays([our_address.address, guy_address.address]).transact(from_address=our_address)
         assert mcd.ds_chief.vote_yays([self.spell.address.address]).transact(from_address=guy_address)
 
@@ -150,6 +151,7 @@ class TestSimpleDatabase:
     def test_yays_update(self, mcd: DssDeployment, simpledb: SimpleDatabase, our_address: Address,  guy_address: Address):
         print_out("test_yays_update")
 
+        # Vote 1000 mkr on our address
         assert mcd.ds_chief.vote_yays([our_address.address]).transact(from_address=our_address)
         block = mcd.web3.eth.blockNumber
 
@@ -163,7 +165,7 @@ class TestSimpleDatabase:
 
 
     def test_etas_update(self, mcd: DssDeployment, simpledb: SimpleDatabase, our_address: Address,  guy_address: Address):
-        print_out("test_yays_update")
+        print_out("test_etas_update")
 
         assert mcd.ds_chief.lift(pytest.global_spell.address).transact(from_address=our_address)
         assert pytest.global_spell.schedule().transact(from_address=our_address)

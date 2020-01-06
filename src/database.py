@@ -98,7 +98,7 @@ class SimpleDatabase:
                 spell = DSSSpell(self.web3, Address(yay))
                 eta = self.get_eta_inUnix(spell)
 
-                if eta >= self.web3.eth.getBlock(blockNumber).timestamp:
+                if (eta > 0) and (spell.done() == False):
                     etas[spell.address.address] = eta
 
         return etas

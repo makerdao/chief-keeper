@@ -29,7 +29,7 @@ from web3 import Web3, HTTPProvider
 from src.database import SimpleDatabase
 from src.spell import DSSSpell
 
-from pymaker import Address, Contract
+from pymaker import Address, Contract, Receipt
 from pymaker.util import is_contract_at
 from pymaker.gas import DefaultGasPrice, FixedGasPrice
 from pymaker.auctions import Flipper, Flapper, Flopper
@@ -198,6 +198,7 @@ class ChiefKeeper:
 
         self.database.update_db_etas(blockNumber)
         etas = self.database.db.get(doc_id=3)["upcoming_etas"]
+        print(f'ETA: {etas}')
 
         yays = list(etas.keys())
 
@@ -207,8 +208,11 @@ class ChiefKeeper:
 
                 if spell.done() == False:
                     spell.cast().transact(gas_price=self.gas_price())
+                    # receipt = Receipt(spell.cast().transact(gas_price=self.gas_price()))
+                    # hash = receipt.transaction_hash
+                    # print(receipt)
 
-                del etas[yay]
+                # del etas[yay]
 
         self.database.db.update({'upcoming_etas': etas}, doc_ids=[3])
 

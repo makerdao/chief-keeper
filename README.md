@@ -14,7 +14,7 @@ While in operation, the `chief-keeper`:
 TBA
 
 ## Architecture
-TBA
+![alt text](operation.jpeg)
 
 ## Operation
 
