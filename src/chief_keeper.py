@@ -40,6 +40,8 @@ from pymaker.token import ERC20Token
 from pymaker.deployment import DssDeployment
 from pymaker.dss import Ilk, Urn
 
+from Naked.toolshed.shell import execute_js, muterun_js
+
 
 class ChiefKeeper:
     """Keeper that lifts the hat and streamlines executive actions"""
@@ -180,11 +182,9 @@ class ChiefKeeper:
             self.dss.ds_chief.lift(Address(contender)).transact(gas_price=self.gas_price())
             spell = DSSSpell(self.web3, Address(contender))
 
-            if spell.done() == False:
-                eta = self.database.get_eta_inUnix(spell)
-                now = self.web3.eth.getBlock(blockNumber).timestamp
-
-                if eta == 0:
+            if is_contract_at(self.web3, Address(yay)):
+                # If spell is not casted AND if it hasn't been scheduled yet
+                if spell.done() == False and self.database.get_eta_inUnix(spell) == 0:
                     spell.schedule().transact(gas_price=self.gas_price())
 
         else:
@@ -212,7 +212,14 @@ class ChiefKeeper:
                     # hash = receipt.transaction_hash
                     # print(receipt)
 
-                # del etas[yay]
+                    response = muterun_js('debuggingRevert.js')
+                    if response.exitcode == 0:
+                      print(response.stdout)
+                    else:
+                      print(response.stderr)
+                      # sys.stderr.write(response.stderr)
+
+                del etas[yay]
 
         self.database.db.update({'upcoming_etas': etas}, doc_ids=[3])
 

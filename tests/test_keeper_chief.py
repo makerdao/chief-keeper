@@ -81,7 +81,7 @@ class TestChiefKeeper:
         print_out("test_check_deployment")
         keeper.check_deployment()
 
-    @pytest.mark.skip(reason="spell.cast() is reverting ")
+    # @pytest.mark.skip(reason="spell.cast() is reverting ")
     def test_check_eta(self, mcd: DssDeployment, keeper: ChiefKeeper):
         print_out("test_check_eta")
 
