@@ -208,16 +208,6 @@ class ChiefKeeper:
 
                 if spell.done() == False:
                     spell.cast().transact(gas_price=self.gas_price())
-                    # receipt = Receipt(spell.cast().transact(gas_price=self.gas_price()))
-                    # hash = receipt.transaction_hash
-                    # print(receipt)
-
-                    response = muterun_js('debuggingRevert.js')
-                    if response.exitcode == 0:
-                      print(response.stdout)
-                    else:
-                      print(response.stderr)
-                      # sys.stderr.write(response.stderr)
 
                 del etas[yay]
 

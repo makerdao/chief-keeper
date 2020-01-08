@@ -204,7 +204,6 @@ contract VatAbstract {
 }
 
 
-////// src/McdIlkLineSpell.sol
 // Copyright (C) 2019 Maker Foundation
 //
 // This program is free software: you can redistribute it and/or modify
@@ -220,33 +219,27 @@ contract VatAbstract {
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-/* pragma solidity ^0.5.12; */
+pragma solidity ^0.5.12;
 
-/* import "ds-math/math.sol"; */
-
-/* import "lib/dss-interfaces/src/dss/VatAbstract.sol"; */
-/* import "lib/dss-interfaces/src/dapp/DSPauseAbstract.sol"; */
 
 contract SpellAction is DSMath {
-    address public VAT;
-
     // not provided in DSMath
     uint constant RAD = 10 ** 45;
 
-    constructor(address vatAdd) public {
-      VAT = vatAdd
+    constructor() public {
+        // sup Kenton
     }
 
-    function execute() public {
+    function execute(address _vat) public {
         uint256 newIlkLine = mul(0, RAD);
-        (,,, uint256 oldIlkLine,) = VatAbstract(VAT).ilks("ETH-A");
+        (,,, uint256 oldIlkLine,) = VatAbstract(_vat).ilks("ETH-A");
 
         uint256 vatLine = (newIlkLine > oldIlkLine) ?
-            add(VatAbstract(VAT).Line(), sub(newIlkLine, oldIlkLine)) :
-            sub(VatAbstract(VAT).Line(), sub(oldIlkLine, newIlkLine));
+            add(VatAbstract(_vat).Line(), sub(newIlkLine, oldIlkLine)) :
+            sub(VatAbstract(_vat).Line(), sub(oldIlkLine, newIlkLine));
 
-        VatAbstract(VAT).file("ETH-A", "line", newIlkLine);
-        VatAbstract(VAT).file("Line", vatLine);
+        VatAbstract(_vat).file("ETH-A", "line", newIlkLine);
+        VatAbstract(_vat).file("Line", vatLine);
     }
 }
 
@@ -260,8 +253,11 @@ contract McdIlkLineSpell is DSMath {
 
     constructor(address pauseAdd, address vatAdd) public {
         pause = DSPauseAbstract(pauseAdd);
-        sig = abi.encodeWithSignature("execute()");
-        action = address(new SpellAction(vatAdd));
+        sig = abi.encodeWithSignature(
+            "execute(address)",
+            vatAdd
+        );
+        action = address(new SpellAction());
         bytes32 _tag;
         address _action = action;
         assembly { _tag := extcodehash(_action) }
