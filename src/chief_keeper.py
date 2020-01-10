@@ -40,7 +40,6 @@ from pymaker.token import ERC20Token
 from pymaker.deployment import DssDeployment
 from pymaker.dss import Ilk, Urn
 
-from Naked.toolshed.shell import execute_js, muterun_js
 
 
 class ChiefKeeper:
@@ -110,8 +109,7 @@ class ChiefKeeper:
 
 
     def main(self):
-        """ Initialize the lifecycle and enter into the Keeper Lifecycle controller
-
+        """ Initialize the lifecycle and enter into the Keeper Lifecycle controller.
         Each function supplied by the lifecycle will accept a callback function that will be executed.
         The lifecycle.on_block() function will enter into an infinite loop, but will gracefully shutdown
         if it recieves a SIGINT/SIGTERM signal.
@@ -136,7 +134,7 @@ class ChiefKeeper:
 
     def initial_query(self):
         self.logger.info('')
-        self.logger.info('Querying Yays in DS-Chief since last update ( ! Could take up to 15 minutes ! )')
+        self.logger.info('Querying Yays in DS-Chief since last update ( !! Could take up to 15 minutes !! )')
 
         self.database = SimpleDatabase(self.web3,
                                        self.deployment_block,
@@ -148,7 +146,9 @@ class ChiefKeeper:
 
 
     def process_block(self):
-        """Callback called on each new block. If too many errors, terminate the keeper to minimize potential damage."""
+        """Callback called on each new block. If too many errors, terminate the keeper.
+        This is the entrypoint to the Keeper's monitoring logic
+        """
         if self.errors >= self.max_errors:
             self.lifecycle.terminate()
         else:
@@ -156,8 +156,15 @@ class ChiefKeeper:
             self.check_eta()
 
 
-
     def check_hat(self):
+        """Ensures the Hat is on the proposal (yay) with the most approval.
+
+        First, the local database is updated with proposal addresses that have been `etched` in DSChief between
+        the last block reviewed and the most recent block receieved. Next, it simply traverses through each address,
+        checking if its approval has surpased the current Hat. If it has, it will `lift` the hat.
+
+        If the current or new hat hasn't been casted nor plotted in the pause, it will `schedule` the spell
+        """
         blockNumber = self.web3.eth.blockNumber
         self.logger.info(f'Checking Hat on block {blockNumber}')
 
@@ -181,17 +188,31 @@ class ChiefKeeper:
             self.logger.info(f'New hat ({contender}) with Approvals {highestApprovals}')
             self.dss.ds_chief.lift(Address(contender)).transact(gas_price=self.gas_price())
             spell = DSSSpell(self.web3, Address(contender))
-
-            if is_contract_at(self.web3, Address(yay)):
-                # If spell is not casted AND if it hasn't been scheduled yet
-                if spell.done() == False and self.database.get_eta_inUnix(spell) == 0:
-                    spell.schedule().transact(gas_price=self.gas_price())
-
         else:
             self.logger.info(f'Current hat ({hat}) with Approvals {hatApprovals}')
+            spell = DSSSpell(self.web3, Address(hat))
+
+        self.check_schedule(spell, yay)
+
+
+    def check_schedule(self, spell: DSSSpell, yay: string):
+        """Schedules spells that are not casted nor been scheduled"""
+        if is_contract_at(self.web3, Address(yay)):
+
+            if spell.done() == False and self.database.get_eta_inUnix(spell) == 0:
+                self.logger.info(f'Scheduling spell ({yay})')
+                spell.schedule().transact(gas_price=self.gas_price())
 
 
     def check_eta(self):
+        """Ensures that spells that have been sched
+
+        First, the local database is updated with proposal addresses that have been `etched` in DSChief between
+        the last block reviewed and the most recent block receieved. Next, it simply traverses through each address,
+        checking if its approval has surpased the current Hat.
+
+        If it has, it will `lift` the hat, as well as `schedule` the spell if it's hasn't been casted nor scheduled.
+        """
         blockNumber = self.web3.eth.blockNumber
         now = self.web3.eth.getBlock(blockNumber).timestamp
         self.logger.info(f'Checking scheduled spells on block {blockNumber}')
@@ -212,8 +233,6 @@ class ChiefKeeper:
                 del etas[yay]
 
         self.database.db.update({'upcoming_etas': etas}, doc_ids=[3])
-
-
 
 
     def gas_price(self):
