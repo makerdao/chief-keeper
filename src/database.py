@@ -15,30 +15,18 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import argparse
-import logging
-import sys
-import time
-from datetime import datetime, timezone
-import types
+from datetime import timezone
 import os
 from typing import List
 
 from tinydb import TinyDB, Query
-from web3 import Web3, HTTPProvider
+from web3 import Web3
 
 from src.spell import DSSSpell
 
-from pymaker import Address, Contract
+from pymaker import Address
 from pymaker.util import is_contract_at
-from pymaker.gas import DefaultGasPrice, FixedGasPrice
-from pymaker.auctions import Flipper, Flapper, Flopper
-from pymaker.keys import register_keys
-from pymaker.lifecycle import Lifecycle
-from pymaker.numeric import Wad, Rad, Ray
-from pymaker.token import ERC20Token
 from pymaker.deployment import DssDeployment
-from pymaker.dss import Ilk, Urn
 
 
 class SimpleDatabase:
@@ -54,8 +42,8 @@ class SimpleDatabase:
         """ Updates a locally stored database with the DS-Chief state since its last update.
         If a local database is not found, create one and query the DS-Chief state since its deployment.
         """
-        basepath = os.path.dirname(__file__)
-        filepath = os.path.abspath(os.path.join(basepath, "db_"+self.network+".json"))
+        parentpath = os.path.abspath(os.path.join("..", os.path.dirname(__file__)))
+        filepath = os.path.abspath(os.path.join(parentpath, "database", "db_"+self.network+".json"))
 
         if os.path.isfile(filepath) and os.access(filepath, os.R_OK):
         # checks if file exists

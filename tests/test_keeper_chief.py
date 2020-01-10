@@ -18,27 +18,16 @@
 
 import pytest
 
-from datetime import datetime, timedelta, timezone
 import time
 from typing import List
-import logging
 
-from tinydb import TinyDB, Query
 from web3 import Web3
 
 from src.chief_keeper import ChiefKeeper
 from src.spell import DSSSpell
 
 from pymaker import Address
-from pymaker.approval import directly, hope_directly
-from pymaker.auctions import Flapper, Flopper, Flipper
 from pymaker.deployment import DssDeployment
-from pymaker.dss import Collateral, Ilk, Urn
-from pymaker.numeric import Wad, Ray, Rad
-from pymaker.shutdown import ShutdownModule, End
-
-from tests.test_auctions import create_debt, check_active_auctions, max_dart, simulate_bite
-from tests.test_dss import mint_mkr, wrap_eth, frob, set_collateral_price
 
 
 
@@ -65,7 +54,6 @@ def verify(addresses: List, listOrDict, leng: int):
     else:
         assert len(list(listOrDict.keys())) == leng
 
-    print(f'listOrDict {listOrDict}')
     for addr in addresses:
         assert addr in listOrDict
 
@@ -81,7 +69,6 @@ class TestChiefKeeper:
         print_out("test_check_deployment")
         keeper.check_deployment()
 
-    # @pytest.mark.skip(reason="spell.cast() is reverting ")
     def test_check_eta(self, mcd: DssDeployment, keeper: ChiefKeeper):
         print_out("test_check_eta")
 

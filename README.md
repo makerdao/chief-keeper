@@ -1,14 +1,16 @@
 # chief-keeper
 
-**Still under active development**
+[![Build Status](https://travis-ci.org/makerdao/chief-keeper.svg?branch=dev)](https://travis-ci.org/makerdao/chief-keeper)
+[![codecov](https://codecov.io/gh/makerdao/chief-keeper/branch/dev/graph/badge.svg)](https://codecov.io/gh/makerdao/chief-keeper)
 
-Commonly known as the `Mad Hatter`, the `chief-keeper` monitors and interacts with [DS-Chief](https://github.com/dapphub/ds-chief), the executive voting contract, and [DS-Pause](https://github.com/dapphub/ds-pause), the Governance Security Module (GSM), of the [Maker Protocol](https://github.com/makerdao/dss).
+
+The `chief-keeper` monitors and interacts with [DS-Chief](https://github.com/dapphub/ds-chief) and [DS-Pause](https://github.com/dapphub/ds-pause), which is the executive voting contract and the Governance Security Module (GSM), respectively, of the [Maker Protocol](https://github.com/makerdao/dss).
 
 While in operation, the `chief-keeper`:
 * Monitors each new block for a change in the state of executive votes
-* `lift()`s the hat for the proposal (`yay`) most favored (`approvals[yay]`)
-* Schedules proposals in the GSM (i.e. `plot` a `plan`)
-* Executes proposals after their `plot` has elapsed in the GSM
+* `lift`s the hat for the proposal (`yay`) most favored (`approvals[yay]`)
+* Schedules spells in the GSM by calling `DSSSpell.schedule()`
+* Executes spells after their `eta` has elapsed in the GSM by calling `DSSSpell.cast()`
 
 ### Prerequisites
 TBA
@@ -23,7 +25,7 @@ If you'd like to create your own database from scratch, first delete `src/yays_d
 
 ### Installation
 
-This project uses *Python 3.6.2*.
+This project uses *Python 3.6.6*.
 
 In order to clone the project and install required third-party packages please execute:
 ```

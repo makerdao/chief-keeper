@@ -19,26 +19,19 @@ import argparse
 import logging
 import sys
 import time
-from datetime import datetime, timezone
 import types
-import os
-from typing import List
 
 from web3 import Web3, HTTPProvider
 
 from src.database import SimpleDatabase
 from src.spell import DSSSpell
 
-from pymaker import Address, Contract, Receipt
+from pymaker import Address
 from pymaker.util import is_contract_at
-from pymaker.gas import DefaultGasPrice, FixedGasPrice
-from pymaker.auctions import Flipper, Flapper, Flopper
+from pymaker.gas import DefaultGasPrice
 from pymaker.keys import register_keys
 from pymaker.lifecycle import Lifecycle
-from pymaker.numeric import Wad, Rad, Ray
-from pymaker.token import ERC20Token
 from pymaker.deployment import DssDeployment
-from pymaker.dss import Ilk, Urn
 
 
 
@@ -198,7 +191,7 @@ class ChiefKeeper:
         self.check_schedule(spell, yay)
 
 
-    def check_schedule(self, spell: DSSSpell, yay: string):
+    def check_schedule(self, spell: DSSSpell, yay: str):
         """ Schedules spells that haven't been scheduled nor casted """
         if is_contract_at(self.web3, Address(yay)):
 

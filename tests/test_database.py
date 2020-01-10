@@ -18,27 +18,21 @@
 
 import pytest
 
-from datetime import datetime, timedelta, timezone
 import time
 from typing import List
 import logging
 
-from tinydb import TinyDB, Query
 from web3 import Web3
 
 from src.spell import DSSSpell
 from src.database import SimpleDatabase
 
 from pymaker import Address
-from pymaker.approval import directly, hope_directly
-from pymaker.auctions import Flapper, Flopper, Flipper
 from pymaker.deployment import DssDeployment
-from pymaker.dss import Collateral, Ilk, Urn
-from pymaker.numeric import Wad, Ray, Rad
-from pymaker.shutdown import ShutdownModule, End
+from pymaker.numeric import Wad
 
-from tests.test_auctions import create_debt, check_active_auctions, max_dart, simulate_bite
-from tests.test_dss import mint_mkr, wrap_eth, frob, set_collateral_price
+from tests.test_dss import mint_mkr
+
 
 
 def time_travel_by(web3: Web3, seconds: int):
@@ -65,7 +59,6 @@ def verify(addresses: List, listOrDict, leng: int):
     else:
         assert len(list(listOrDict.keys())) == leng
 
-    print(f'listOrDict {listOrDict}')
     for addr in addresses:
         assert addr in listOrDict
 
@@ -83,10 +76,12 @@ class TestSimpleDatabase:
     def test_setup(self, mcd: DssDeployment, our_address: Address, guy_address: Address):
         print_out("test_setup")
 
+        # Give 1000 MKR to our_address
         amount = Wad.from_number(1000)
         mint_mkr(mcd.mkr, our_address, amount)
         assert mcd.mkr.balance_of(our_address) == amount
 
+        #Give 2000 MKR to guy_address
         guyAmount = Wad.from_number(2000)
         mint_mkr(mcd.mkr, guy_address, guyAmount)
         assert mcd.mkr.balance_of(guy_address) == guyAmount

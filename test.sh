@@ -1,6 +1,7 @@
 #!/bin/bash
 
-rm src/db_testnet.json
+# Remove the testnet database
+rm src/database/db_testnet.json
 
 # Pull the docker image
 docker pull makerdao/testchain-pymaker:unit-testing
