@@ -110,10 +110,10 @@ class ChiefKeeper:
 
     def main(self):
         """ Initialize the lifecycle and enter into the Keeper Lifecycle controller.
+
         Each function supplied by the lifecycle will accept a callback function that will be executed.
         The lifecycle.on_block() function will enter into an infinite loop, but will gracefully shutdown
         if it recieves a SIGINT/SIGTERM signal.
-
         """
 
         with Lifecycle(self.web3) as lifecycle:
@@ -133,8 +133,11 @@ class ChiefKeeper:
 
 
     def initial_query(self):
+        """ Updates a locally stored database with the DS-Chief state since its last update.
+        If a local database is not found, create one and query the DS-Chief state since its deployment.
+        """
         self.logger.info('')
-        self.logger.info('Querying Yays in DS-Chief since last update ( !! Could take up to 15 minutes !! )')
+        self.logger.info('Querying DS-Chief state since last update ( !! Could take up to 15 minutes !! )')
 
         self.database = SimpleDatabase(self.web3,
                                        self.deployment_block,
@@ -146,7 +149,7 @@ class ChiefKeeper:
 
 
     def process_block(self):
-        """Callback called on each new block. If too many errors, terminate the keeper.
+        """ Callback called on each new block. If too many errors, terminate the keeper.
         This is the entrypoint to the Keeper's monitoring logic
         """
         if self.errors >= self.max_errors:
@@ -157,9 +160,9 @@ class ChiefKeeper:
 
 
     def check_hat(self):
-        """Ensures the Hat is on the proposal (yay) with the most approval.
+        """ Ensures the Hat is on the proposal (spell, EOA, multisig, etc) with the most approval.
 
-        First, the local database is updated with proposal addresses that have been `etched` in DSChief between
+        First, the local database is updated with proposal addresses (yays) that have been `etched` in DSChief between
         the last block reviewed and the most recent block receieved. Next, it simply traverses through each address,
         checking if its approval has surpased the current Hat. If it has, it will `lift` the hat.
 
@@ -196,7 +199,7 @@ class ChiefKeeper:
 
 
     def check_schedule(self, spell: DSSSpell, yay: string):
-        """Schedules spells that are not casted nor been scheduled"""
+        """ Schedules spells that haven't been scheduled nor casted """
         if is_contract_at(self.web3, Address(yay)):
 
             if spell.done() == False and self.database.get_eta_inUnix(spell) == 0:
@@ -205,13 +208,11 @@ class ChiefKeeper:
 
 
     def check_eta(self):
-        """Ensures that spells that have been sched
+        """ Cast spells that meet their schedule.
 
-        First, the local database is updated with proposal addresses that have been `etched` in DSChief between
-        the last block reviewed and the most recent block receieved. Next, it simply traverses through each address,
-        checking if its approval has surpased the current Hat.
-
-        If it has, it will `lift` the hat, as well as `schedule` the spell if it's hasn't been casted nor scheduled.
+        First, the local database is updated with spells that have been scheduled between the last block
+        reviewed and the most recent block receieved. Next, it simply traverses through each spell address,
+        checking if its schedule has been reached/passed. If it has, it attempts to `cast` the spell.
         """
         blockNumber = self.web3.eth.blockNumber
         now = self.web3.eth.getBlock(blockNumber).timestamp
@@ -219,7 +220,6 @@ class ChiefKeeper:
 
         self.database.update_db_etas(blockNumber)
         etas = self.database.db.get(doc_id=3)["upcoming_etas"]
-        print(f'ETA: {etas}')
 
         yays = list(etas.keys())
 
@@ -236,7 +236,7 @@ class ChiefKeeper:
 
 
     def gas_price(self):
-        """  DefaultGasPrice """
+        """ DefaultGasPrice """
         return DefaultGasPrice()
 
 

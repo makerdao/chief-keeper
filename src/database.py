@@ -42,6 +42,7 @@ from pymaker.dss import Ilk, Urn
 
 
 class SimpleDatabase:
+    """ Wraps around the logic to create, update, and query the Keeper's local database """
     def __init__(self, web3: Web3, block: int, network: str, deployment: DssDeployment):
         self.web3 = web3
         self.deployment_block = block
@@ -50,6 +51,9 @@ class SimpleDatabase:
 
 
     def create(self):
+        """ Updates a locally stored database with the DS-Chief state since its last update.
+        If a local database is not found, create one and query the DS-Chief state since its deployment.
+        """
         basepath = os.path.dirname(__file__)
         filepath = os.path.abspath(os.path.join(basepath, "db_"+self.network+".json"))
 
@@ -79,17 +83,17 @@ class SimpleDatabase:
 
         return etaInUnix
 
+
     def update_db_etas(self, blockNumber: int):
-        """ Add yays with etas that have yet to be passed """
+        """ Add yays with upcoming etas """
         yays = self.db.get(doc_id=2)["yays"]
         etas = self.get_etas(yays, blockNumber)
 
         self.db.update({'upcoming_etas': etas}, doc_ids=[3])
 
 
-
     def get_etas(self, yays, blockNumber: int):
-        """ Get all etas that are scheduled in the future """
+        """ Get all upcoming etas """
         etas = {}
         for yay in yays:
 
@@ -105,7 +109,7 @@ class SimpleDatabase:
 
 
     def update_db_yays(self, currentBlockNumber: int):
-
+        """ Store yays that have been `etched` in DS-Chief since the last update """
         DBblockNumber = self.db.get(doc_id=1)["last_block_checked_for_yays"]
         currentYays = self.get_yays(DBblockNumber,currentBlockNumber)
         oldYays = self.db.get(doc_id=2)["yays"]
@@ -117,9 +121,8 @@ class SimpleDatabase:
         self.db.update({'last_block_checked_for_yays': currentBlockNumber}, doc_ids=[1])
 
 
-
     def get_yays(self, beginBlock: int, endBlock: int):
-
+        """ Get all `etched` yays within a given block range """
         etches = self.dss.ds_chief.past_etch_in_range(beginBlock, endBlock)
         maxYays = self.dss.ds_chief.get_max_yays()
 
@@ -129,16 +132,9 @@ class SimpleDatabase:
 
         return yays if not None else []
 
-    # inspiration -> https://github.com/makerdao/dai-plugin-governance/blob/master/src/ChiefService.js#L153
-    # When I have time
-    # def unpack_slate(self, slate, i = 0):
-    #     try:
-    #         return [self.dss.ds_chief.get_yay(slate, i)].extend(
-    #             self.unpack_slate(slate, i + 1))
-    #     except:
-    #         return []
 
     def unpack_slate(self, slate, maxYays: int) -> List:
+        """ Unpack the slate into its yay constituents """
         yays = []
 
         for i in range(0, maxYays):
@@ -149,3 +145,13 @@ class SimpleDatabase:
             yays = yays + yay
 
         return yays
+
+
+    # TODO: When time is available, incorporate this recursion
+    # inspiration -> https://github.com/makerdao/dai-plugin-governance/blob/master/src/ChiefService.js#L153
+    # def unpack_slate(self, slate, i = 0):
+    #     try:
+    #         return [self.dss.ds_chief.get_yay(slate, i)].extend(
+    #             self.unpack_slate(slate, i + 1))
+    #     except:
+    #         return []

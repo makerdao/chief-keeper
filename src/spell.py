@@ -31,7 +31,7 @@ from pymaker.util import is_contract_at
 from pymaker.numeric import Wad, Rad, Ray
 
 class DSSSpell(Contract):
-    """A client for the `DSPause` contract, which schedules function calls after a predefined delay.
+    """A client for the `DSSSpell` contract, which houses logic that makes changes to the Maker Protocol.
 
     You can find the source code of the `DSSSpell` contract here:
 
