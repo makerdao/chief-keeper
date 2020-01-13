@@ -22,7 +22,6 @@ from web3 import Web3
 from pymaker import Address, Contract, Transact
 
 
-
 class DSSSpell(Contract):
     """A client for the `DSSSpell` contract, which houses logic that makes changes to the Maker Protocol.
 
@@ -33,7 +32,7 @@ class DSSSpell(Contract):
         address: Ethereum address of the `DSSSpell` contract.
     """
 
-    # This ABI and BIN was used from the McdIlkLineSpell.sol
+    # This ABI and BIN was used from a modified McdIlkLineSpell.sol, located here: https://gist.github.com/godsflaw/3a6cfcdbe8cc08d5df8b03f1be0432df
     abi = Contract._load_abi(__name__, 'abi/DSSSpell.abi')
     bin = Contract._load_bin(__name__, 'abi/DSSSpell.bin')
 

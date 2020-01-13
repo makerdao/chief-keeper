@@ -22,7 +22,7 @@ from typing import List
 from tinydb import TinyDB, Query
 from web3 import Web3
 
-from src.spell import DSSSpell
+from chief_keeper.spell import DSSSpell
 
 from pymaker import Address
 from pymaker.util import is_contract_at
@@ -36,7 +36,6 @@ class SimpleDatabase:
         self.deployment_block = block
         self.network = network
         self.dss = deployment
-
 
     def create(self):
         """ Updates a locally stored database with the DS-Chief state since its last update.
@@ -64,13 +63,11 @@ class SimpleDatabase:
 
         return result
 
-
     def get_eta_inUnix(self, spell: DSSSpell) -> int:
         eta = spell.eta()
         etaInUnix = eta.replace(tzinfo=timezone.utc).timestamp()
 
         return etaInUnix
-
 
     def update_db_etas(self, blockNumber: int):
         """ Add yays with upcoming etas """
@@ -78,7 +75,6 @@ class SimpleDatabase:
         etas = self.get_etas(yays, blockNumber)
 
         self.db.update({'upcoming_etas': etas}, doc_ids=[3])
-
 
     def get_etas(self, yays, blockNumber: int):
         """ Get all upcoming etas """
@@ -95,7 +91,6 @@ class SimpleDatabase:
 
         return etas
 
-
     def update_db_yays(self, currentBlockNumber: int):
         """ Store yays that have been `etched` in DS-Chief since the last update """
         DBblockNumber = self.db.get(doc_id=1)["last_block_checked_for_yays"]
@@ -108,7 +103,6 @@ class SimpleDatabase:
         self.db.update({'yays': newYays}, doc_ids=[2])
         self.db.update({'last_block_checked_for_yays': currentBlockNumber}, doc_ids=[1])
 
-
     def get_yays(self, beginBlock: int, endBlock: int):
         """ Get all `etched` yays within a given block range """
         etches = self.dss.ds_chief.past_etch_in_range(beginBlock, endBlock)
@@ -119,7 +113,6 @@ class SimpleDatabase:
             yays = yays + self.unpack_slate(etch.slate, maxYays)
 
         return yays if not None else []
-
 
     def unpack_slate(self, slate, maxYays: int) -> List:
         """ Unpack the slate into its yay constituents """
@@ -133,7 +126,6 @@ class SimpleDatabase:
             yays = yays + yay
 
         return yays
-
 
     # TODO: When time is available, incorporate this recursion
     # inspiration -> https://github.com/makerdao/dai-plugin-governance/blob/master/src/ChiefService.js#L153

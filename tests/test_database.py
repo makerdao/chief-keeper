@@ -24,8 +24,8 @@ import logging
 
 from web3 import Web3
 
-from src.spell import DSSSpell
-from src.database import SimpleDatabase
+from chief_keeper.spell import DSSSpell
+from chief_keeper.database import SimpleDatabase
 
 from pymaker import Address
 from pymaker.deployment import DssDeployment

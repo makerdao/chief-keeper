@@ -23,8 +23,8 @@ import types
 
 from web3 import Web3, HTTPProvider
 
-from src.database import SimpleDatabase
-from src.spell import DSSSpell
+from chief_keeper.database import SimpleDatabase
+from chief_keeper.spell import DSSSpell
 
 from pymaker import Address
 from pymaker.util import is_contract_at
@@ -32,7 +32,6 @@ from pymaker.gas import DefaultGasPrice
 from pymaker.keys import register_keys
 from pymaker.lifecycle import Lifecycle
 from pymaker.deployment import DssDeployment
-
 
 
 class ChiefKeeper:

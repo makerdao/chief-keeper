@@ -28,8 +28,8 @@ from pymaker.dss import Vat, Vow, Cat, Jug, Pot
 from pymaker.shutdown import ShutdownModule, End
 from pymaker.keys import register_keys
 
-from src.chief_keeper import ChiefKeeper
-from src.database import SimpleDatabase
+from chief_keeper.chief_keeper import ChiefKeeper
+from chief_keeper.database import SimpleDatabase
 
 
 @pytest.fixture(scope='session')

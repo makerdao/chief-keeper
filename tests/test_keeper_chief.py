@@ -23,8 +23,8 @@ from typing import List
 
 from web3 import Web3
 
-from src.chief_keeper import ChiefKeeper
-from src.spell import DSSSpell
+from chief_keeper.chief_keeper import ChiefKeeper
+from chief_keeper.spell import DSSSpell
 
 from pymaker import Address
 from pymaker.deployment import DssDeployment
