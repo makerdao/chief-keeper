@@ -4,11 +4,11 @@
 [![codecov](https://codecov.io/gh/makerdao/chief-keeper/branch/dev/graph/badge.svg)](https://codecov.io/gh/makerdao/chief-keeper)
 
 
-The `chief-keeper` monitors and interacts with [DS-Chief](https://github.com/dapphub/ds-chief) and DSS-Spells, which is the executive voting contract and a type of proposal object of the [Maker Protocol](https://github.com/makerdao/dss).
+The `chief-keeper` monitors and interacts with [DSChief](https://github.com/dapphub/ds-chief) and DSSSpells, which is the executive voting contract and a type of proposal object of the [Maker Protocol](https://github.com/makerdao/dss).
 
-Its purpose is to lift the `hat` in DS-Chief as well as streamline executive actions.
+Its purpose is to lift the `hat` in DSChief as well as streamline executive actions.
 
-To lift the hat, the spell must only have more approval than the current `chief` (the proposal with the hat). The approval of this `chief` can fluctuate and be surpassed by other spells, some of which could be malicious. This keeper "guards" the `chief` and ensures that the hat is on the spell with the most approval, in order to maximize the barrier of entry (approval) to `lift` the hat.
+To `lift` a spell, that spell must have more approvals than the current `hat`. The approvals of this spell can fluctuate and be surpassed by other spells, some of which could be malicious. This keeper "guards" the `hat` by ensuring the spell with the most approval is always the `hat`.  The `chief-keeper` does this in order to maximize the barrier of entry (approval) to `lift` a spell to the hat, thus acting as a "guard" against malicious governance actions.
 
 While in operation, the `chief-keeper`:
 * Monitors each new block for a change in the state of executive votes
@@ -17,12 +17,12 @@ While in operation, the `chief-keeper`:
 * Executes spells after their `eta` has elapsed in the GSM by calling `DSSSpell.cast()`
 
 ### Prerequisites
-The following section assumes familiarity with the [DS-Chief](https://github.com/dapphub/ds-chief), DSS-Spells, and [DS-Pause](https://github.com/dapphub/ds-pause) (Governance Security Module), as well as the processes within [MakerDao Governance](https://community-development.makerdao.com/governance).
+The following section assumes familiarity with the [DSChief](https://github.com/dapphub/ds-chief), DSSSpells, and [DSPause](https://github.com/dapphub/ds-pause) (Governance Security Module), as well as the processes within [MakerDAO Governance](https://community-development.makerdao.com/governance).
 
 ## Architecture
 ![alt text](operation.jpeg)
 
-`chief-keeper` interacts directly with the `DS-Chief` and `DSS-Spell`s.
+`chief-keeper` interacts directly with the `DS-Chief` and `DSSSpell`s.
 
 ## Operation
 

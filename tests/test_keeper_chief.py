@@ -106,3 +106,5 @@ class TestChiefKeeper:
 
         # Confirm that the spell was scheduled
         assert self.spell.eta() != 0
+
+

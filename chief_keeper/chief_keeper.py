@@ -1,6 +1,6 @@
 # This file is part of the Maker Keeper Framework.
 #
-# Copyright (C) 2019 KentonPrescott
+# Copyright (C) 2020 KentonPrescott
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -194,6 +194,7 @@ class ChiefKeeper:
         """ Schedules spells that haven't been scheduled nor casted """
         if is_contract_at(self.web3, Address(yay)):
 
+            # Functional with DSSSpells but not DSSpells (not compatiable with DSPause)
             if spell.done() == False and self.database.get_eta_inUnix(spell) == 0:
                 self.logger.info(f'Scheduling spell ({yay})')
                 spell.schedule().transact(gas_price=self.gas_price())
@@ -220,9 +221,13 @@ class ChiefKeeper:
                 spell = DSSSpell(self.web3, Address(yay))
 
                 if spell.done() == False:
-                    spell.cast().transact(gas_price=self.gas_price())
+                    receipt = spell.cast().transact(gas_price=self.gas_price())
 
-                del etas[yay]
+                    if receipt.successful == True:
+                        del etas[yay]
+
+                else:
+                    del etas[yay]
 
         self.database.db.update({'upcoming_etas': etas}, doc_ids=[3])
 
