@@ -1,7 +1,7 @@
 # chief-keeper
 
-[![Build Status](https://travis-ci.org/makerdao/chief-keeper.svg?branch=dev)](https://travis-ci.org/makerdao/chief-keeper)
-[![codecov](https://codecov.io/gh/makerdao/chief-keeper/branch/dev/graph/badge.svg)](https://codecov.io/gh/makerdao/chief-keeper)
+[![Build Status](https://travis-ci.org/makerdao/chief-keeper.svg?branch=master)](https://travis-ci.org/makerdao/chief-keeper)
+[![codecov](https://codecov.io/gh/makerdao/chief-keeper/branch/master/graph/badge.svg)](https://codecov.io/gh/makerdao/chief-keeper)
 
 
 The `chief-keeper` monitors and interacts with [DSChief](https://github.com/dapphub/ds-chief) and DSSSpells, which is the executive voting contract and a type of proposal object of the [Maker Protocol](https://github.com/makerdao/dss).
