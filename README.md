@@ -1,29 +1,37 @@
 # chief-keeper
 
-**Still under active development**
+[![Build Status](https://travis-ci.org/makerdao/chief-keeper.svg?branch=dev)](https://travis-ci.org/makerdao/chief-keeper)
+[![codecov](https://codecov.io/gh/makerdao/chief-keeper/branch/dev/graph/badge.svg)](https://codecov.io/gh/makerdao/chief-keeper)
 
-Commonly known as the `Mad Hatter`, the `chief-keeper` monitors and interacts with [DS-Chief](https://github.com/dapphub/ds-chief), the executive voting contract, and [DS-Pause](https://github.com/dapphub/ds-pause), the Governance Security Module (GSM), of the [Maker Protocol](https://github.com/makerdao/dss).
+
+The `chief-keeper` monitors and interacts with [DSChief](https://github.com/dapphub/ds-chief) and DSSSpells, which is the executive voting contract and a type of proposal object of the [Maker Protocol](https://github.com/makerdao/dss).
+
+Its purpose is to lift the `hat` in DSChief as well as streamline executive actions.
+
+To `lift` a spell, that spell must have more approvals than the current `hat`. The approvals of this spell can fluctuate and be surpassed by other spells, some of which could be malicious. This keeper "guards" the `hat` by ensuring the spell with the most approval is always the `hat`.  The `chief-keeper` does this in order to maximize the barrier of entry (approval) to `lift` a spell to the hat, thus acting as a "guard" against malicious governance actions.
 
 While in operation, the `chief-keeper`:
 * Monitors each new block for a change in the state of executive votes
-* `lift()`s the hat for the proposal (`yay`) most favored (`approvals[yay]`)
-* Schedules proposals in the GSM (i.e. `plot` a `plan`)
-* Executes proposals after their `plot` has elapsed in the GSM
+* `lift`s the hat for the spell (`yay`) most favored (`approvals[yay]`)
+* Schedules spells in the GSM by calling `DSSSpell.schedule()`
+* Executes spells after their `eta` has elapsed in the GSM by calling `DSSSpell.cast()`
 
 ### Prerequisites
-TBA
+The following section assumes familiarity with the [DSChief](https://github.com/dapphub/ds-chief), DSSSpells, and [DSPause](https://github.com/dapphub/ds-pause) (Governance Security Module), as well as the processes within [MakerDAO Governance](https://community-development.makerdao.com/governance).
 
 ## Architecture
-TBA
+![alt text](operation.jpeg)
+
+`chief-keeper` interacts directly with the `DS-Chief` and `DSSSpell`s.
 
 ## Operation
 
-This keeper is run continuously, and saves a local database of `yays` to minimize chain state reads.
-If you'd like to create your own database from scratch, first delete `src/yays_db_mainnet.json` before running `bin/chief-keeper`; the initial query of all `yays` could take up to 15 minutes.
+This keeper is run continuously, and saves a local database of `yays` (spell addresses) and an `yay:eta` dictionary to reduce chain state reads.
+If you'd like to create your own database from scratch, first delete `src/database/db_mainnet.json` before running `bin/chief-keeper`; the initial query could take up to 15 minutes.
 
 ### Installation
 
-This project uses *Python 3.6.2*.
+This project uses *Python 3.6.6*.
 
 In order to clone the project and install required third-party packages please execute:
 ```
@@ -32,13 +40,14 @@ cd chief-keeper
 git submodule update --init --recursive
 ./install.sh
 ```
+If `tinydb` isn't visible/installed through `./install.sh`, simply run `pip3 install tinydb` after the commands above.
 
 For some known Ubuntu and macOS issues see the [pymaker](https://github.com/makerdao/pymaker) README.
 
 
 ### Sample Startup Script
 
-Make a run-cage-keeper.sh to easily spin up the cage-keeper.
+Make a run-chief-keeper.sh to easily spin up the chief-keeper.
 
 ```
 #!/bin/bash
@@ -70,7 +79,7 @@ You can then run all tests with:
 ```
 
 ## Roadmap
-
+- [ ]  [Dynamic gas pricing strategy](https://github.com/makerdao/market-maker-keeper/blob/master/market_maker_keeper/gas.py)
 
 
 ## License

@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Remove the testnet database
+rm chief_keeper/database/db_testnet.json
+
 # Pull the docker image
 docker pull makerdao/testchain-pymaker:unit-testing
 
@@ -9,7 +12,7 @@ docker-compose up -d
 sleep 2
 popd
 
-PYTHONPATH=$PYTHONPATH:./lib/pymaker py.test -s --cov=src --cov-report=term --cov-append tests/test_chiefKeeper.py $@
+PYTHONPATH=$PYTHONPATH:./lib/pymaker py.test -s --cov=chief_keeper --cov-report=term tests/ $@
 TEST_RESULT=$?
 
 echo Stopping container

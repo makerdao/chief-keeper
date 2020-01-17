@@ -28,19 +28,18 @@ from pymaker.dss import Vat, Vow, Cat, Jug, Pot
 from pymaker.shutdown import ShutdownModule, End
 from pymaker.keys import register_keys
 
-from src.chief_keeper import ChiefKeeper
+from chief_keeper.chief_keeper import ChiefKeeper
+from chief_keeper.database import SimpleDatabase
 
 
 @pytest.fixture(scope='session')
 def new_deployment() -> Deployment:
     return Deployment()
 
-
 @pytest.fixture()
 def deployment(new_deployment: Deployment) -> Deployment:
     new_deployment.reset()
     return new_deployment
-
 
 @pytest.fixture(scope="session")
 def web3() -> Web3:
@@ -61,7 +60,6 @@ def web3() -> Web3:
 
     assert len(web3.eth.accounts) > 3
     return web3
-
 
 @pytest.fixture(scope="session")
 def our_address(web3) -> Address:
@@ -84,19 +82,6 @@ def deployment_address(web3) -> Address:
     # FIXME: Unsure why it isn't added to web3.eth.accounts list
     return Address("0x00a329c0648769A73afAc7F9381E08FB43dBEA72")
 
-
-# @pytest.fixture(scope="session")
-# def mcd(web3) -> DssDeployment:
-#     # for local dockerized parity testchain
-#     basepath = path.dirname(__file__)
-#     filepath = path.abspath(path.join(basepath, "..", "lib", "pymaker", "config", "testnet-addresses.json"))
-#     pymaker_deployment_config = filepath
-#
-#     deployment = DssDeployment.from_json(web3=web3, conf=open(pymaker_deployment_config, "r").read())
-#     validate_contracts_loaded(deployment)
-#     return deployment
-
-
 @pytest.fixture(scope="session")
 def mcd(web3) -> DssDeployment:
 
@@ -108,9 +93,14 @@ def mcd(web3) -> DssDeployment:
 @pytest.fixture(scope="session")
 def keeper(mcd: DssDeployment, keeper_address: Address) -> ChiefKeeper:
     keeper = ChiefKeeper(args=args(f"--eth-from {keeper_address} --network testnet"), web3=mcd.web3)
-    assert isinstance(keeper, CageKeeper)
-
+    assert isinstance(keeper, ChiefKeeper)
     return keeper
+
+@pytest.fixture(scope="session")
+def simpledb(web3: Web3, mcd: DssDeployment) -> SimpleDatabase:
+    simpledb = SimpleDatabase(web3, 0, "testnet", mcd)
+    assert isinstance(simpledb, SimpleDatabase)
+    return simpledb
 
 def args(arguments: str) -> list:
     return arguments.split()

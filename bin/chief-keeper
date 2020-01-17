@@ -5,4 +5,4 @@ source $dir/_virtualenv/bin/activate || exit
 
 export PYTHONPATH=$PYTHONPATH:$dir:$dir/lib/pymaker
 
-exec python3 -m src.chief_keeper $@
+exec python3 -m chief_keeper.chief_keeper $@

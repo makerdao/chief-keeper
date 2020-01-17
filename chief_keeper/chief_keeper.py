@@ -1,6 +1,6 @@
 # This file is part of the Maker Keeper Framework.
 #
-# Copyright (C) 2019 KentonPrescott
+# Copyright (C) 2020 KentonPrescott
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -19,25 +19,20 @@ import argparse
 import logging
 import sys
 import time
-from datetime import datetime, timezone
 import types
-import os
-from typing import List
-
-from tinydb import TinyDB, Query
 
 from web3 import Web3, HTTPProvider
 
+from chief_keeper.database import SimpleDatabase
+from chief_keeper.spell import DSSSpell
 
 from pymaker import Address
-from pymaker.gas import DefaultGasPrice, FixedGasPrice
-from pymaker.auctions import Flipper, Flapper, Flopper
+from pymaker.util import is_contract_at
+from pymaker.gas import DefaultGasPrice
 from pymaker.keys import register_keys
 from pymaker.lifecycle import Lifecycle
-from pymaker.numeric import Wad, Rad, Ray
-from pymaker.token import ERC20Token
 from pymaker.deployment import DssDeployment
-from pymaker.dss import Ilk, Urn
+
 
 class ChiefKeeper:
     """Keeper that lifts the hat and streamlines executive actions"""
@@ -47,7 +42,7 @@ class ChiefKeeper:
     def __init__(self, args: list, **kwargs):
         """Pass in arguements assign necessary variables/objects and instantiate other Classes"""
 
-        parser = argparse.ArgumentParser("simple-arbitrage-keeper")
+        parser = argparse.ArgumentParser("chief-keeper")
 
         parser.add_argument("--rpc-host", type=str, default="localhost",
                             help="JSON-RPC host (default: `localhost')")
@@ -106,12 +101,11 @@ class ChiefKeeper:
 
 
     def main(self):
-        """ Initialize the lifecycle and enter into the Keeper Lifecycle controller
+        """ Initialize the lifecycle and enter into the Keeper Lifecycle controller.
 
         Each function supplied by the lifecycle will accept a callback function that will be executed.
         The lifecycle.on_block() function will enter into an infinite loop, but will gracefully shutdown
         if it recieves a SIGINT/SIGTERM signal.
-
         """
 
         with Lifecycle(self.web3) as lifecycle:
@@ -127,51 +121,53 @@ class ChiefKeeper:
         self.logger.info(f'DS-Chief: {self.dss.ds_chief.address}')
         self.logger.info(f'DS-Pause: {self.dss.pause.address}')
         self.logger.info('')
+        self.initial_query()
 
-        self.query_yays()
 
-    def query_yays(self):
+    def initial_query(self):
+        """ Updates a locally stored database with the DS-Chief state since its last update.
+        If a local database is not found, create one and query the DS-Chief state since its deployment.
+        """
         self.logger.info('')
-        self.logger.info('Querying Yays in DS-Chief since last update ( ! Could take up to 15 minutes ! )')
+        self.logger.info('Querying DS-Chief state since last update ( !! Could take up to 15 minutes !! )')
 
-        basepath = os.path.dirname(__file__)
-        filepath = os.path.abspath(os.path.join(basepath, "yays_db_"+self.arguments.network+".json"))
+        self.database = SimpleDatabase(self.web3,
+                                       self.deployment_block,
+                                       self.arguments.network,
+                                       self.dss)
+        result = self.database.create()
 
-        if os.path.isfile(filepath) and os.access(filepath, os.R_OK):
-        # checks if file exists
-            self.logger.info("Simple database exists and is readable")
-            self.db = TinyDB(filepath)
-        else:
-            self.logger.info("Either file is missing or is not readable, creating simple database")
-            self.db = TinyDB(filepath)
-
-            blockNumber = self.web3.eth.blockNumber
-            self.db.insert({'last_blockNumber_checked': blockNumber})
-            yays = self.get_yays(self.deployment_block, blockNumber)
-
-            self.db.insert({'yays': yays})
-
-
+        self.logger.info(result)
 
 
     def process_block(self):
-        """Callback called on each new block. If too many errors, terminate the keeper to minimize potential damage."""
+        """ Callback called on each new block. If too many errors, terminate the keeper.
+        This is the entrypoint to the Keeper's monitoring logic
+        """
         if self.errors >= self.max_errors:
             self.lifecycle.terminate()
         else:
             self.check_hat()
+            self.check_eta()
 
 
     def check_hat(self):
+        """ Ensures the Hat is on the proposal (spell, EOA, multisig, etc) with the most approval.
 
+        First, the local database is updated with proposal addresses (yays) that have been `etched` in DSChief between
+        the last block reviewed and the most recent block receieved. Next, it simply traverses through each address,
+        checking if its approval has surpased the current Hat. If it has, it will `lift` the hat.
+
+        If the current or new hat hasn't been casted nor plotted in the pause, it will `schedule` the spell
+        """
         blockNumber = self.web3.eth.blockNumber
         self.logger.info(f'Checking Hat on block {blockNumber}')
 
-        self.update_yays_db(blockNumber)
+        self.database.update_db_yays(blockNumber)
+        yays = self.database.db.get(doc_id=2)["yays"]
+
         hat = self.dss.ds_chief.get_hat().address
         hatApprovals = self.dss.ds_chief.get_approvals(hat)
-
-        yays = self.db.get(doc_id=2)["yays"]
 
         contender, highestApprovals = hat, hatApprovals
 
@@ -185,68 +181,59 @@ class ChiefKeeper:
             self.logger.info(f'Lifting hat')
             self.logger.info(f'Old hat ({hat}) with Approvals {hatApprovals}')
             self.logger.info(f'New hat ({contender}) with Approvals {highestApprovals}')
-            # TODO, add Hat
+            self.dss.ds_chief.lift(Address(contender)).transact(gas_price=self.gas_price())
+            spell = DSSSpell(self.web3, Address(contender))
         else:
             self.logger.info(f'Current hat ({hat}) with Approvals {hatApprovals}')
+            spell = DSSSpell(self.web3, Address(hat))
+
+        self.check_schedule(spell, yay)
 
 
+    def check_schedule(self, spell: DSSSpell, yay: str):
+        """ Schedules spells that haven't been scheduled nor casted """
+        if is_contract_at(self.web3, Address(yay)):
+
+            # Functional with DSSSpells but not DSSpells (not compatiable with DSPause)
+            if spell.done() == False and self.database.get_eta_inUnix(spell) == 0:
+                self.logger.info(f'Scheduling spell ({yay})')
+                spell.schedule().transact(gas_price=self.gas_price())
 
 
+    def check_eta(self):
+        """ Cast spells that meet their schedule.
 
+        First, the local database is updated with spells that have been scheduled between the last block
+        reviewed and the most recent block receieved. Next, it simply traverses through each spell address,
+        checking if its schedule has been reached/passed. If it has, it attempts to `cast` the spell.
+        """
+        blockNumber = self.web3.eth.blockNumber
+        now = self.web3.eth.getBlock(blockNumber).timestamp
+        self.logger.info(f'Checking scheduled spells on block {blockNumber}')
 
+        self.database.update_db_etas(blockNumber)
+        etas = self.database.db.get(doc_id=3)["upcoming_etas"]
 
-    def update_yays_db(self, currentBlockNumber):
+        yays = list(etas.keys())
 
-        DBblockNumber = self.db.get(doc_id=1)["last_blockNumber_checked"]
-        newYays = self.get_yays(DBblockNumber,currentBlockNumber)
-        oldYays = self.db.get(doc_id=2)["yays"]
+        for yay in yays:
+            if etas[yay] <= now:
+                spell = DSSSpell(self.web3, Address(yay))
 
-        self.db.update({'yays': oldYays + newYays}, doc_ids=[2])
-        self.db.update({'last_blockNumber_checked': currentBlockNumber}, doc_ids=[1])
+                if spell.done() == False:
+                    receipt = spell.cast().transact(gas_price=self.gas_price())
 
+                    if receipt.successful == True:
+                        del etas[yay]
 
+                else:
+                    del etas[yay]
 
-
-
-    def get_yays(self, beginBlock, endBlock):
-
-        etches = self.dss.ds_chief.past_etch_in_range(beginBlock, endBlock)
-        maxYays = self.dss.ds_chief.get_max_yays()
-
-        yays = []
-        for etch in etches:
-            yays = yays + self.get_slate_addresses(etch.slate, maxYays)
-
-        yays = list(dict.fromkeys(yays))
-
-        return yays if not None else []
-
-    # inspiration -> https://github.com/makerdao/dai-plugin-governance/blob/master/src/ChiefService.js#L153
-    # Fix
-    # def get_slate_addresses(self, slate, i = 0):
-    #     try:
-    #         return [self.dss.ds_chief.get_yay(slate, i)].extend(
-    #             self.get_slate_addresses(slate, i + 1))
-    #     except:
-    #         return []
-
-    def get_slate_addresses(self, slate, maxYays):
-        yays = []
-
-        for i in range(0, maxYays):
-            try:
-                yay = [self.dss.ds_chief.get_yay(slate,i)]
-            except ValueError:
-                break
-            yays = yays + yay
-
-        return yays
-
-
+        self.database.db.update({'upcoming_etas': etas}, doc_ids=[3])
 
 
     def gas_price(self):
-        """  DefaultGasPrice """
+        """ DefaultGasPrice """
         return DefaultGasPrice()
 
 
