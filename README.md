@@ -16,7 +16,7 @@ While in operation, the `chief-keeper`:
 * Schedules spells in the GSM by calling `DSSSpell.schedule()`
 * Executes spells after their `eta` has elapsed in the GSM by calling `DSSSpell.cast()`
 
-### Prerequisites
+### Review
 The following section assumes familiarity with the [DSChief](https://github.com/dapphub/ds-chief), DSSSpells, and [DSPause](https://github.com/dapphub/ds-pause) (Governance Security Module), as well as the processes within [MakerDAO Governance](https://community-development.makerdao.com/governance).
 
 ## Architecture
@@ -63,7 +63,10 @@ Make a run-chief-keeper.sh to easily spin up the chief-keeper.
 ## Testing
 
 Prerequisites:
-* Download [docker and docker-compose](https://www.docker.com/get-started)
+- [Python v3.6.6](https://www.python.org/downloads/release/python-366/)
+- [virtualenv](https://virtualenv.pypa.io/en/latest/)
+    - This project requires *virtualenv* to be installed if you want to use Maker's python tools. This helps with making sure that you are running the right version of python and checks that all of the pip packages that are installed in the **install.sh** are in the right place and have the right versions.
+- Download [docker and docker-compose](https://www.docker.com/get-started)
 
 This project uses [pytest](https://docs.pytest.org/en/latest/) for unit testing.  Testing of Multi-collateral Dai is
 performed on a Dockerized local testchain included in `tests\config`.
