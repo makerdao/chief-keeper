@@ -5,7 +5,7 @@ cd "$(dirname "$0")"
 set -e
 
 rm -rf _virtualenv
-virtualenv --python=/usr/bin/python3 _virtualenv
+virtualenv --python=`which python3` _virtualenv
 . _virtualenv/bin/activate
 
 # The advantage of using this method, in contrary to just calling `pip3 install -r requirements.txt` several times,
