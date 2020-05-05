@@ -7,11 +7,10 @@ cache: pip
 before_cache:
 - rm -f $HOME/.cache/pip/log/debug.log
 install:
-- pip install $(cat requirements.txt $(find lib -name requirements.txt | sort) | sort
-  | uniq | sed 's/ *== */==/g')
+- pip install $(cat requirements.txt $(find lib -name requirements.txt | sort) | sort | uniq | sed 's/ *== */==/g')
 - pip install -r requirements-dev.txt
-script:
-- "./test.sh"
+# script:
+# - "./test.sh"
 after_success:
 - codecov
 deploy:
@@ -25,3 +24,5 @@ env:
   global:
   - secure: BvbCSZVBK7WDVPGsECPuF+sXnX0xYbwZJy1k8+qSFGw3Q8j/oDIVf3szLpLzW3ywem7BxKIYBjzWzI6qEu5C/BOsbKk13NoCe7E92bRcfzjtpBApLK249uSC3Uaz9YU7a7rh5cEY/gJaSgHFuq3iFZl9zKRrD/Wc2iakMru7VdQjcnhDV/Ya5Q1+UPtJ+DZRsmHpsTHmS/tmYLCBDYIhV2elFO4bSi7hRdANRrNfUrpZ3U02qmVGZI19XjM1GG/zwP9fbb03gWP7129zyg6HWkkogcLPqF+bPbCY6zaRpe1IwHd2GK/dj1TEfTsTMS6apA+Mmp42uARHRMIfxv6CLFfrs+E0SOMRvIT+QxD1uyEaqjFe30GekycUEqnliCPkyHnr2hn8/JiZPiqv7ndSOfd59XTrA5/+o8jWL+TtOGBO+sD1a2lcmVGYdTXosPaEgBc7ufYjJ++Cxrd/OD4P5puKaied4aUJjwLEdkNFcu+W018Udhp3Cbk1KNZRgK6srT4rFy3kY+n+smt8AHqUWTKtA1wOSl6bkSQEPZH7eEdjZGBHbD9ZoVwPHKIaKCyLk2UbFzAxbPlxlzXb0wt/hBPUYe8hA5oindixCHxi0DcvtucpmtoK7w+KR/od3kveb7L+ZEAjG1QDUs2ggTebev7tRpaz28rEWjoAvuhlRUE=
   - secure: HP7MuV/UzjoxcKhEA1SpjOHsBppvsjKqvQDlF8aFsO2PyFT6PU7ZjUhdlUBSmnlHZBm8TaoaQtV15I0BqUX0D8i8xnfPBKjR8rbLMV8R4lab5RLMjW4sdijM9FbfnhcgZY2QKrdCluXqbHFC10lssFgEP4UwmzrRiLdaYf3BBlEv4mNjh8DxG6Lg5rYE6W7+e9vm6Pzlgza8s8/hWL8ZhG3PwURP96OhXFSe6NP4OWtSGGWrt3WK0kzo7mDbHNo0Y3LVFvPcuEL65zOkoFz5DuMhjFyYnB3bulJcX43kWEterTZjOwJ/3Y7aOnUoiO5M+QYQ/q4wDtYAyjBlgqh6Z74KXLFIx+1gu6R+vwKQJBPJ46XHFBaN99JfNgFnZn5YujpHiUkGifpC5lHre8bb/sL11yPdV0lnNjrlmvEivbK7vtVUvJsghBySK4AXyoEQ5ouCAa+2QSzhLVZRGFLHq6mUT5iP7tIYjQX5J5jPgpqYmxJrg1aPXgJ+LbHFAy9nNxGQ6phh3D1f3g8QQ55l9wNblGuUh1Pb1gZLRi+2xmE3UsNdcK3qp1cuz5YTrMrH3B3u8tt6X4/wUSjhFNbnDTrFW0AST2aF4h52J5C8klU1qTQNUDYqpEa6g2l11TQVvtPhCGxcY4nAnTUW/to/Bh90a9fmkIrOjqoVf6+nCDs=
+  - secure: iOAly8o2ohlT/Wgcy/H+bf8lhfJIiUK+0RPGYyu4yWniOg3cVI9pCWENvluyQO42cOgBl2CkqIzK0n428IXmuy0RsDelH7Om7LJhqIqrgjz/SAj2j1psbywh2wpzQ1TNo2pW4UWJ9rLpcCA//om/deCvJKE+quofbDGK397lQQNV2ihlK/NaaQbBN4B9XMByplD6QoWpacyhFrEfaZ6R+wYzQOvjQodh8ea5+vNeoG81oN8VPYg+B66akH6duQ4CkOsTfl3+W3MtsQn4BFDL2labHLyi+VpSE7i1rHO8YyU/6TSa78emIyvbm86nS0lxRnXYKFhGZPPV0+lYVTFoA4M2KjZ1qMC6N9rowsWN40g4tCvVCNpDP7wCqsT52qXm2nx3FWcb5rDqH68wwDHEzPOpZjCpmwQbdaebbaIEyMJl0fO8u1tmzyJXriDB3FFPx3v+zzMoSg0+LXQAmdH10auDwudVdeItSuwVsBHRJRD206vncLIhOARQS2IoxOas+TCLwF1FgsXEFDKdoEwfUHS9bvFoIz4qUY6QZTpA+XuKyc5Gi0GSPtv7blQ09/lf01n3bTCK+YDOxwUzLtsKplZvOknTEHxlzS9bXqRIyUDjHEceDAFOfUeMpLs9KetN0rMDtRlVXjt1h0ajQT/UpVTGNgzaZYmVl0IZGYzGyDQ=
+  - secure: Za11thTxlN1IlX84acPs1rob3uzN6IghYvFJ2/EyJIWnirQ+tnY04fQekZOych82D+BaDFce8qih7y3G9ECRXovSRtL3BXNblU+0Ge3d97fJyM5bF5nuH2hl5c/tGkEzvP4DRwsydZwhrYgeU41NIo0cLHfdr6USgyCO5fPXIroroMoygI+sdHsgOO2jEPQ8E0nUqLoKNjW0/9OX8q+oaxduiAs1A023plDFbWYABzmrBs5FkNDdedokiO2yWP29xfO1yZa6zZhr/9dt3kdU+CN/u72uuoGkAbCIFgrpsztHWVp/WgZVT43k0Ok7TM60H05ikNS4YdBOyfS43VrWXSzcHmi4PRHRFmIYs+bptVfHPkGhfRuD/VQw0UxLEjpOj1q6t7E5GiKebqagT197NrsfIpY7T2YM9qhy86gWNrJwWp5uvt0fm4R2E2MOeax7SA9xLRgG8k/F6es4bP1u6h6ViQTFPkxdte6ySAQFolOaDohO10U4tsYOXtCCrE4PdM8ZaWUEObukkg/qr7VV2/d+EezuGxTRqBYvc8MH/AhBOdDx3w8Q1GZ+gQM6NAqEyb5zs8KmXNmQHUhI/ibmTH8Vk7UgLCgqP+hr3M7cEJx/VDjaTOOteHpExhWkyDCtBks1+v7ET0Dm+D0Nid51uneR2pDF25dViJx+W5Sf9NM=

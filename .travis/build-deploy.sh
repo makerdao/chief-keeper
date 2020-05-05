@@ -36,13 +36,13 @@ echo "$DOCKER_PASSWORD" | docker login --username "$DOCKER_USER" --password-stdi
 docker push "$TRAVIS_REPO_SLUG:$TAG"
 
 # service deploy
-# if [ "$ENVIRONMENT" == "prod" ]; then
-#   message DEPLOYING MAINNET
-#   aws ecs update-service --cluster cage-keeper-mainnet-cluster --service cage-keeper-mainnet-service --force-new-deployment --endpoint https://ecs.$REGION.amazonaws.com --region $REGION
+if [ "$ENVIRONMENT" == "prod" ]; then
+  message DEPLOYING MAINNET
+  aws ecs update-service --cluster chief-keeper-mainnet-cluster --service chief-keeper-mainnet-service --force-new-deployment --endpoint https://ecs.$REGION.amazonaws.com --region $REGION
 
-#   message DEPLOYING KOVAN
-#   aws ecs update-service --cluster cage-keeper-kovan-cluster --service cage-keeper-kovan-service --force-new-deployment --endpoint https://ecs.$REGION.amazonaws.com --region $REGION
+  message DEPLOYING KOVAN
+  aws ecs update-service --cluster chief-keeper-kovan-cluster --service chief-keeper-kovan-service --force-new-deployment --endpoint https://ecs.$REGION.amazonaws.com --region $REGION
 
-# else
-#    message UNKNOWN ENVIRONMENT
-# fi
+else
+   message UNKNOWN ENVIRONMENT
+fi
