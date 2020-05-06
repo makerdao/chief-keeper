@@ -13,8 +13,8 @@ before_install:
 install:
   - pip install $(cat requirements.txt $(find lib -name requirements.txt | sort) | sort | uniq | sed 's/ *== */==/g')
   - pip install -r requirements-dev.txt
-script:
-  - ./test.sh
+# script:
+#   - ./test.sh
 after_success:
   - codecov
 deploy:
