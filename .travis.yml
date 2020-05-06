@@ -6,13 +6,13 @@ python:
 cache: pip
 before_cache:
 - rm -f $HOME/.cache/pip/log/debug.log
+before_install:
+- sudo apt-get update
+- sudo apt-get -y install python3-pip
+- sudo pip3 install awscli
 install:
 - pip install $(cat requirements.txt $(find lib -name requirements.txt | sort) | sort | uniq | sed 's/ *== */==/g')
 - pip install -r requirements-dev.txt
-# script:
-# - "./test.sh"
-# after_success:
-# - codecov
 deploy:
 - provider: script
   script: bash ./.travis/build-deploy.sh prod us-east-1
