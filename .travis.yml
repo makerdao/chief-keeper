@@ -11,9 +11,10 @@ before_install:
 - sudo apt-get -y install python3-pip python3-setuptools
 - sudo pip3 install awscli
 install:
-- pip install $(cat requirements.txt $(find lib -name requirements.txt | sort) | sort
-  | uniq | sed 's/ *== */==/g')
+- pip install $(cat requirements.txt $(find lib -name requirements.txt | sort) | sort | uniq | sed 's/ *== */==/g')
 - pip install -r requirements-dev.txt
+script:
+- echo "need some tests"
 deploy:
 - provider: script
   script: bash ./.travis/build-deploy.sh prod us-east-1
