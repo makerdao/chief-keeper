@@ -25,15 +25,15 @@ if [ -z "$ENVIRONMENT" ]; then
   exit 1
 fi
 
+
 # build image
 message BUILDING IMAGE
 docker build -t "$TRAVIS_REPO_SLUG:$TAG" .
-
 # docker login
 echo "$DOCKER_PASSWORD" | docker login --username "$DOCKER_USER" --password-stdin
-
 # docker push
 docker push "$TRAVIS_REPO_SLUG:$TAG"
+
 
 # service deploy
 if [ "$ENVIRONMENT" == "prod" ]; then
