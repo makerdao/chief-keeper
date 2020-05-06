@@ -13,10 +13,5 @@ RUN git clone https://github.com/makerdao/chief-keeper.git && \
     pip3 install virtualenv && \
     ./install.sh
 
-# temp
-COPY run-chief-keeper.sh /opt/keeper/chief-keeper
-RUN mkdir /opt/keeper/chief-keeper/secrets
-
 WORKDIR /opt/keeper/chief-keeper
-
 CMD ["./run-chief-keeper.sh"]

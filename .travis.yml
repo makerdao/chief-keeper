@@ -15,11 +15,13 @@ install:
 - pip install -r requirements-dev.txt
 script:
 - echo "need some tests"
+after_success:
+- echo "codecov will exec here"
 deploy:
 - provider: script
   script: bash ./.travis/build-deploy.sh prod us-east-1
   on:
-    branch: TO-779-dockerizing-chief-keeper
+    branch: master
 notifications:
   email: false
 env:
