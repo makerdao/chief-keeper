@@ -1,25 +1,32 @@
 language: python
-
 os:
-  - linux
-
+- linux
 python:
-  - 3.6
-
+- 3.6
 cache: pip
-
 before_cache:
-  - rm -f $HOME/.cache/pip/log/debug.log
-
+- rm -f $HOME/.cache/pip/log/debug.log
+before_install:
+- sudo apt-get update
+- sudo apt-get -y install python3-pip python3-setuptools
+- sudo pip3 install awscli
 install:
-  - pip install $(cat requirements.txt $(find lib -name requirements.txt | sort) | sort | uniq | sed 's/ *== */==/g')
-  - pip install -r requirements-dev.txt
-
+- pip install $(cat requirements.txt $(find lib -name requirements.txt | sort) | sort | uniq | sed 's/ *== */==/g')
+- pip install -r requirements-dev.txt
 script:
-  - ./test.sh
-
+- echo "need some tests"
 after_success:
-  - codecov
-
+- echo "codecov will exec here"
+deploy:
+- provider: script
+  script: bash ./.travis/build-deploy.sh prod us-east-1
+  on:
+    branch: master
 notifications:
   email: false
+env:
+  global:
+  - secure: Abg606I3CV0YtuyB8XIRcxdFBO0OBJnK97KqEk11z1L2yEjAol+ikg7DqjJXRdRixwrDnVv6f7w6hChjS1ocVoEePK4KlU9ZWmhkbmdLtqhaKSGYS6fOuuCUcS0ZdClIininqjJGkgA8C2zUR63+b0lCNC30oAeekU7pfUKHeyW/Sw4OwS3ZnxljM3XKuFzuhbPPAzjfw9V8ulVvokjpONQuN0iwsvkfqlJC7vy4Ubl2FnEdqg14nZJIRogZdOABI08WrQd/vJY9lS8NRvyCAQi06z9q9Bhem8w8m7u7VK9832MwaYkdyrn1qSCaXWL7EA3CE0ME74FGHhxCaYdQayFKpOmzFmSNNcMAZR63MDRy0hEPGcoZLMlurQrRNEynthselx9xy15AcUhfbupWnMsWM2FHIT43eRzCBrqsvFL21nkJjUfo4VEmyjzgfMOybR0DZWv0fe1ZAjYSWojx7uoFBaKReAfKTws94RDz7Vjtm6wBuuLdCDq+hkby43WturX97jQYq3RniOuu1NFijJL1fWgLdxgkoK06V1nl/vTDuC3tJpP6bS9tp4suPD8btYsxHIZjbHNjXhpKkn5unQbzBM6aqKe9kGNW/bNNZwX3BzoiQDlvEWvmJc5EaniFVzOCR8DHlr6Z9+leAq7dPvrwWUa4qjB/1Hlkudtfnqo=
+  - secure: j2H2/SIkt1uLODzBkb7phN9dykQXxnLGNfaWy66PwyrhA+wGH5mwd+/f23npabcz+f+S1DzmvCn4omF0DRe7VouUz5GJFKvGKI/LrZntQaR3w3baiZOZ5EkuO9FqzIJhK7Cz6DQCo/nM6956bGT8oY0m4ZHYWnVC/AXelWxDxV9ZrNhgNeoHP+uKIuc2T66sfhOdtFA9V9pT1j1fOlhdNm81BgVwxg6DbZDj5buPd86eGBj3pkEb9O59G3U7pLHVNeFwNARAH0hAUHgmWWnz5NcpyUlet63dWV0p+XblqXVtz/7pPt9FZBkr6w4VUnlUw7QL2EAxxgv1QfVQU+f8DY5iV1B7UM4bKpUrGFm8Gis2xFjL7VH7gfMj5MhiLbs/UhFxshA5D8WAqRnckFBt2/lcoiLZBLPYvZedi0TfQOrWsucfPAQqMIyBR4RgQszmBnuJbAhms3C9H881MC8pIRUgzSfNvu9xp0802f8V1dLz/VTu+NP7gkVzAxanhEFhm4O0uVcv+vJrWjMBVg+iXQap4uZTG0G/VXYP+IA5CQhvMgT4GJwTJ1LqSxnztWgyWocEHhYOFKjM1sIYwBVV2SqHlAJuQpKk19jt8SYhYqqRbpbQTljvj8a9UJgYOvLHMiUR6hHiBKNeiNEJJxeafUUfAa3HUtKOU2AaNUJP57Q=
+  - secure: dcE+X9T2IyFVujpMBgYGPbPALdqRAjOiy4N7dqBhetjXhXeSP5SpjLe3E0Zd9WvCdKWH9mefAnkDFefzZb5Nqe4N3Krnul/yqleXM3/7z8x5O3Bo+xcIWdokBsAMzwSiV+NXpmRJxL0sx/suD3burdwUz6ACL5x+E9P9QPnlbxKK3F8e92WjguqSqJxmKoIw99W3vzqOkrcszlAuS2jzIfV1nOTx6Mz5CK4D6rwvoerMHY6cxjY08gjJKRzcQrykHAjnUvlO+okPkKnzVPb0Ubbh4/U8MiEwIw2Jyhb0sjMdxb6pckpa6uiYQdMIOPCbeBGdqKGaus/xdDyBsw4w2Us0Hy/DRxM6gAlWOiSRkmAewOsawlNyErElUAkkyRmKkd6ZKGX4M3yDBjlFHBlgJVeZ7M7841oNUqGSSm5HmnJ+eryr7m2YqnYXdZ55l4h3T541UeGc7UQjPeRomxB+6Edy4bkgomTRmJUVcHvQT1RhRkaDaBp+AB2IuxHTBKkGpXHsPG5FhqHgjAMW9PrCwuGGy14NquGPDU9YxvC2WnX1JhNJ1h5pps3drxEmU8F3nIYAkC55C9KgLr/knABzi3FLZhtg1DdUk2A6FiUCrnx1wEcGBPDAthkuemcKzUkUTxdopDS4Mqi7xo7xJnqbw52KVIORhnbOqn0c+FEmkZA=
+  - secure: W6j6626f90Ct7naXWKmgl/5Rh11by0eL+xfhKH21KmfaLz7nr4WN0q57J0oxIr0G2ntQi+cgWydY6/wtMLsrTMRR0pBUnct3gOFZj6UInhuOeVAMxSmto+QlSAn84uELaYMmzh5lpkYZa3g4H2eKnV/fkGlCutLtVDnFxwY+6XqVvaZNwROPvAPq6E6o6mL+XqCbToDm/qCb5IKtm4iM88oiBj34wq7L+bLwUAEbXSOAh//H4aIDMddMbbTPylwNa3St/wgAP6OUflrc0L0DopWcCWP0JNU1v5et9kD1fOzpMmKlL6h71uj+73daw9w0E8R3L8LNHg9QDlKnhHtFtsbnOuEGJJg8Q87a50ZC9qrZDc1vaTYPKHkmhY4qZpfAA4hfFKst+0LBLj65WAKskXPpR5EmMgLDq+3JPerp2NAbzkGUgMT0wrr92mtL9AoRIXo3Gx6IU0AxM4iCfUkdXz7rm1PC2u8IyF33oDl1EHl7aA+QluB+/C++qg29TFNdC9OH+2pbsogyQKJMnBxtwrqJlErUA0mLcPVreItPuO6yig5cGTHR2XHXo0QKbh4feIqlH+v8u/2TWOZ/VG0+cGLVf/ybGLbHkZ2H5qObFhemlvoBISH7WfwLj3OO/l/ElwBHsZj9r8JMaLbehaZn4w/nuqPEZ0JXYg8eIk/lDWM=
