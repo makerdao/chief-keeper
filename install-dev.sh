@@ -12,3 +12,4 @@ virtualenv --python=`which python3` _virtualenv
 # is that it can detect different versions of the same dependency and fail with a "Double requirement given"
 # error message.
 pip install $(cat requirements.txt $(find lib -name requirements.txt | sort) | sort | uniq | sed 's/ *== */==/g')
+pip install $(cat requirements-dev.txt $(find lib -name requirements-dev.txt | sort) | sort | uniq | sed 's/ *== */==/g')

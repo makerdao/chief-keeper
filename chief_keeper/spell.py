@@ -45,11 +45,11 @@ class DSSSpell(Contract):
         self._contract = self._get_contract(web3, self.abi, address)
 
     def done(self) -> bool:
-        return self._contract.call().done()
+        return self._contract.functions.done().call()
 
     def eta(self) -> datetime:
         try:
-            timestamp = self._contract.call().eta()
+            timestamp = self._contract.functions.eta().call()
         except ValueError:
             timestamp = 0
 
