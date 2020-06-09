@@ -223,7 +223,7 @@ class ChiefKeeper:
                 if spell.done() == False:
                     receipt = spell.cast().transact(gas_price=self.gas_price())
 
-                    if receipt is not None and receipt.successful == True:
+                    if receipt is None or receipt.successful == True:
                         del etas[yay]
 
                 else:
