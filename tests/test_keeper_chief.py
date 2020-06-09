@@ -147,27 +147,13 @@ class TestChiefKeeper:
 
         keeper.check_hat()
 
-        # assert mcd.ds_chief.lift(spell.address).transact(
-        #     from_address=our_address
-        # )
-        # assert spell.schedule().transact(from_address=our_address)
-
         block = mcd.web3.eth.blockNumber
         simpledb.update_db_etas(block)
-
-        # keeper.check_deployment()
-        # keeper.initial_query()
 
         hat = mcd.ds_chief.get_hat()
 
         etas = keeper.database.db.get(doc_id=3)['upcoming_etas']
         verify([hat.address], etas, 1)
-
-        # cast the spell outside of the keeper
-        # assert spell.cast().transact(from_address=our_address)
-
-        # etas = keeper.database.db.get(doc_id=3)['upcoming_etas']
-        # verify([hat.address], etas, 1)
 
         keeper.check_eta()
 
