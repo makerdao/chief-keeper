@@ -23,13 +23,18 @@ from typing import List
 
 from web3 import Web3
 
+from chief_keeper.database import SimpleDatabase
 from chief_keeper.chief_keeper import ChiefKeeper
 from chief_keeper.spell import DSSSpell
 
 from pymaker import Address
 from pymaker.deployment import DssDeployment
+from pymaker.numeric import Wad
 
+from tests.test_dss import mint_mkr
+from bad_spell import DSSBadSpell
 
+pytest.global_spell = {};
 
 def time_travel_by(web3: Web3, seconds: int):
     assert(isinstance(web3, Web3))
@@ -85,6 +90,7 @@ class TestChiefKeeper:
         etas = keeper.database.db.get(doc_id=3)['upcoming_etas']
         verify([], etas, 0)
 
+
     def test_check_hat(self, mcd: DssDeployment, keeper: ChiefKeeper, guy_address: Address):
         print_out("test_check_hat")
 
@@ -108,3 +114,45 @@ class TestChiefKeeper:
         assert self.spell.eta() != 0
 
 
+    def test_check_eta_receipt(self, mcd: DssDeployment, keeper: ChiefKeeper, simpledb: SimpleDatabase, our_address: Address):
+        print_out("test_check_eta_receipt")
+
+        # clear out anything that came before
+        keeper.check_hat()
+        keeper.check_eta()
+
+        # Give 1000 MKR to our_address
+        amount = Wad.from_number(5000)
+        mint_mkr(mcd.mkr, our_address, amount)
+        assert mcd.mkr.balance_of(our_address) == amount
+
+        # Lock MKR in DS-Chief
+        assert mcd.mkr.approve(mcd.ds_chief.address).transact(from_address=our_address)
+        assert mcd.ds_chief.lock(amount).transact(from_address=our_address)
+
+        # Deploy spell
+        spell = DSSBadSpell.deploy(mcd.web3)
+
+        # Vote 5000 mkr on the spell
+        assert mcd.ds_chief.vote_yays([spell.address.address]).transact(from_address=our_address)
+
+        keeper.check_hat()
+
+        block = mcd.web3.eth.blockNumber
+        simpledb.update_db_etas(block)
+
+        hat = mcd.ds_chief.get_hat()
+
+        etas = keeper.database.db.get(doc_id=3)['upcoming_etas']
+        verify([hat.address], etas, 1)
+
+        keeper.check_eta()
+
+        # Confirm that the spell was casted and that the database was updated
+        # For the DSSBadSpell, the cast() call in non-conformant.  Usually
+        # cast() will flip done to true, but in this broken spell it's modified
+        # to not set done to true so we can test this bug and prevent
+        # regressions.
+        assert DSSBadSpell(mcd.web3, Address(hat)).done() == False
+        etas = keeper.database.db.get(doc_id=3)['upcoming_etas']
+        verify([], etas, 0)

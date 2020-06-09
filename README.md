@@ -72,7 +72,7 @@ performed on a Dockerized local testchain included in `tests\config`.
 
 In order to be able to run tests, please install development dependencies first by executing:
 ```
-pip3 install -r requirements-dev.txt
+./install-dev.sh
 ```
 
 You can then run all tests with:

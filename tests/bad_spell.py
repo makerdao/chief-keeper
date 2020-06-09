@@ -22,19 +22,18 @@ from web3 import Web3
 from pymaker import Address, Contract, Transact
 
 
-class DSSSpell(Contract):
-    """A client for the `DSSSpell` contract, which houses logic that makes changes to the Maker Protocol.
+class DSSBadSpell(Contract):
+    """A client for the `DSSBadSpell` contract, which houses logic that makes changes to the Maker Protocol.
 
-    You can find the source code of the `DSSSpell` contract here:
+    You can find the source code of the `DSSBadSpell` contract here:
 
     Attributes:
         web3: An instance of `Web` from `web3.py`.
-        address: Ethereum address of the `DSSSpell` contract.
+        address: Ethereum address of the `DSSBadSpell` contract.
     """
 
-    # This ABI and BIN was used from a modified McdIlkLineSpell.sol, located here: https://gist.github.com/godsflaw/3a6cfcdbe8cc08d5df8b03f1be0432df
-    abi = Contract._load_abi(__name__, 'abi/DSSSpell.abi')
-    bin = Contract._load_bin(__name__, 'abi/DSSSpell.bin')
+    abi = Contract._load_abi(__name__, 'abi/DSSBadSpell.abi')
+    bin = Contract._load_bin(__name__, 'abi/DSSBadSpell.bin')
 
     def __init__(self, web3: Web3, address: Address):
         assert (isinstance(web3, Web3))
@@ -56,8 +55,8 @@ class DSSSpell(Contract):
         return datetime.utcfromtimestamp(timestamp)
 
     @staticmethod
-    def deploy(web3: Web3, pauseAddress: Address, vatAddress: Address):
-        return DSSSpell(web3=web3, address=Contract._deploy(web3, DSSSpell.abi, DSSSpell.bin, [pauseAddress.address, vatAddress.address]))
+    def deploy(web3: Web3):
+        return DSSBadSpell(web3=web3, address=Contract._deploy(web3, DSSBadSpell.abi, DSSBadSpell.bin, []))
 
     def schedule(self):
         return Transact(self, self.web3, self.abi, self.address, self._contract, 'schedule', [])

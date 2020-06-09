@@ -12,7 +12,14 @@ docker-compose up -d
 sleep 2
 popd
 
-PYTHONPATH=$PYTHONPATH:./lib/pymaker py.test -s --cov=chief_keeper --cov-report=term tests/ $@
+virtualenv --python=`which python3` _virtualenv
+. _virtualenv/bin/activate
+
+PYTHONPATH=$PYTHONPATH:./lib/pymaker:./ py.test \
+    -s \
+    --cov=chief_keeper \
+    --cov-report=term \
+    tests/ $@
 TEST_RESULT=$?
 
 echo Stopping container
