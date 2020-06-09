@@ -114,12 +114,7 @@ class TestChiefKeeper:
         assert self.spell.eta() != 0
 
 
-    def test_check_eta_receipt(
-        self, mcd: DssDeployment,
-        keeper: ChiefKeeper,
-        simpledb: SimpleDatabase,
-        our_address: Address
-    ):
+    def test_check_eta_receipt(self, mcd: DssDeployment, keeper: ChiefKeeper, simpledb: SimpleDatabase, our_address: Address):
         print_out("test_check_eta_receipt")
 
         # clear out anything that came before
@@ -132,18 +127,14 @@ class TestChiefKeeper:
         assert mcd.mkr.balance_of(our_address) == amount
 
         # Lock MKR in DS-Chief
-        assert mcd.mkr.approve(
-            mcd.ds_chief.address
-        ).transact(from_address=our_address)
+        assert mcd.mkr.approve(mcd.ds_chief.address).transact(from_address=our_address)
         assert mcd.ds_chief.lock(amount).transact(from_address=our_address)
 
         # Deploy spell
         spell = DSSBadSpell.deploy(mcd.web3)
 
         # Vote 5000 mkr on the spell
-        assert mcd.ds_chief.vote_yays(
-            [spell.address.address]
-        ).transact(from_address=our_address)
+        assert mcd.ds_chief.vote_yays([spell.address.address]).transact(from_address=our_address)
 
         keeper.check_hat()
 
@@ -158,6 +149,10 @@ class TestChiefKeeper:
         keeper.check_eta()
 
         # Confirm that the spell was casted and that the database was updated
+        # For the DSSBadSpell, the cast() call in non-conformant.  Usually
+        # cast() will flip done to true, but in this broken spell it's modified
+        # to not set done to true so we can test this bug and prevent
+        # regressions.
         assert DSSBadSpell(mcd.web3, Address(hat)).done() == False
         etas = keeper.database.db.get(doc_id=3)['upcoming_etas']
         verify([], etas, 0)
