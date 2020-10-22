@@ -14,9 +14,9 @@ install:
 - pip install $(cat requirements.txt $(find lib -name requirements.txt | sort) | sort | uniq | sed 's/ *== */==/g')
 - pip install -r requirements-dev.txt
 script:
-- echo "need some tests"
+- ./test.sh
 after_success:
-- echo "codecov will exec here"
+- codecov
 deploy:
 - provider: script
   script: bash ./.travis/build-deploy.sh prod us-east-1
