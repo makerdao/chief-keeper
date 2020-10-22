@@ -33,6 +33,8 @@ from pymaker.keys import register_keys
 from pymaker.lifecycle import Lifecycle
 from pymaker.deployment import DssDeployment
 
+from auction_keeper.gas import DynamicGasPrice
+
 
 class ChiefKeeper:
     """Keeper that lifts the hat and streamlines executive actions"""
@@ -74,6 +76,11 @@ class ChiefKeeper:
         parser.add_argument("--debug", dest='debug', action='store_true',
                             help="Enable debug output")
 
+        parser.add_argument("--ethgasstation-api-key", type=str, default=None, help="ethgasstation API key")
+        parser.add_argument("--gas-initial-multiplier", type=str, default=1.0, help="ethgasstation API key")
+        parser.add_argument("--gas-reactive-multiplier", type=str, default=2.25, help="gas strategy tuning")
+        parser.add_argument("--gas-maximum", type=str, default=5000, help="gas strategy tuning")
+
         parser.set_defaults(cageFacilitated=False)
         self.arguments = parser.parse_args(args)
 
@@ -94,6 +101,12 @@ class ChiefKeeper:
         self.errors = 0
 
         self.confirmations = 0
+
+        # Create dynamic gas strategy
+        if self.arguments.ethgasstation_api_key:
+            self.gas_price = DynamicGasPrice(self.arguments, self.web3)
+        else:
+            self.gas_price = DefaultGasPrice()
 
 
         logging.basicConfig(format='%(asctime)-15s %(levelname)-8s %(message)s',
@@ -181,7 +194,7 @@ class ChiefKeeper:
             self.logger.info(f'Lifting hat')
             self.logger.info(f'Old hat ({hat}) with Approvals {hatApprovals}')
             self.logger.info(f'New hat ({contender}) with Approvals {highestApprovals}')
-            self.dss.ds_chief.lift(Address(contender)).transact(gas_price=self.gas_price())
+            self.dss.ds_chief.lift(Address(contender)).transact(gas_price=self.gas_price)
             spell = DSSSpell(self.web3, Address(contender))
         else:
             self.logger.info(f'Current hat ({hat}) with Approvals {hatApprovals}')
@@ -197,7 +210,7 @@ class ChiefKeeper:
             # Functional with DSSSpells but not DSSpells (not compatiable with DSPause)
             if spell.done() == False and self.database.get_eta_inUnix(spell) == 0:
                 self.logger.info(f'Scheduling spell ({yay})')
-                spell.schedule().transact(gas_price=self.gas_price())
+                spell.schedule().transact(gas_price=self.gas_price)
 
 
     def check_eta(self):
@@ -221,7 +234,7 @@ class ChiefKeeper:
                 spell = DSSSpell(self.web3, Address(yay))
 
                 if spell.done() == False:
-                    receipt = spell.cast().transact(gas_price=self.gas_price())
+                    receipt = spell.cast().transact(gas_price=self.gas_price)
 
                     if receipt is None or receipt.successful == True:
                         del etas[yay]
@@ -230,11 +243,6 @@ class ChiefKeeper:
                     del etas[yay]
 
         self.database.db.update({'upcoming_etas': etas}, doc_ids=[3])
-
-
-    def gas_price(self):
-        """ DefaultGasPrice """
-        return DefaultGasPrice()
 
 
 if __name__ == '__main__':
