@@ -16,9 +16,8 @@ install:
 script:
 - ./test.sh
 after_success:
-- codecov
+- echo "codecov will exec here"
 deploy:
-  skip_cleanup: true
 - provider: script
   script: bash ./.travis/build-deploy.sh prod us-east-1
   on:
