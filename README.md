@@ -81,7 +81,7 @@ You can then run all tests with:
 ```
 
 ## Roadmap
-- [ ]  [Dynamic gas pricing strategy](https://github.com/makerdao/market-maker-keeper/blob/master/market_maker_keeper/gas.py)
+- [X]  [Dynamic gas pricing strategy](https://github.com/makerdao/market-maker-keeper/blob/master/market_maker_keeper/gas.py)
 
 
 ## License

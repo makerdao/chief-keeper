@@ -31,7 +31,7 @@ from pymaker import Address
 from pymaker.deployment import DssDeployment
 from pymaker.numeric import Wad
 
-from tests.test_dss import mint_mkr
+from tests.test_governance import mint_approve_lock
 from bad_spell import DSSBadSpell
 
 pytest.global_spell = {};
@@ -123,12 +123,7 @@ class TestChiefKeeper:
 
         # Give 1000 MKR to our_address
         amount = Wad.from_number(5000)
-        mint_mkr(mcd.mkr, our_address, amount)
-        assert mcd.mkr.balance_of(our_address) == amount
-
-        # Lock MKR in DS-Chief
-        assert mcd.mkr.approve(mcd.ds_chief.address).transact(from_address=our_address)
-        assert mcd.ds_chief.lock(amount).transact(from_address=our_address)
+        mint_approve_lock(mcd, amount, our_address)
 
         # Deploy spell
         spell = DSSBadSpell.deploy(mcd.web3)

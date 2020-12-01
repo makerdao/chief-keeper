@@ -78,6 +78,10 @@ def other_address(web3) -> Address:
     return Address(web3.eth.accounts[3])
 
 @pytest.fixture(scope="session")
+def zero_address() -> Address:
+    return Address("0x0000000000000000000000000000000000000000")
+
+@pytest.fixture(scope="session")
 def deployment_address(web3) -> Address:
     # FIXME: Unsure why it isn't added to web3.eth.accounts list
     return Address("0x00a329c0648769A73afAc7F9381E08FB43dBEA72")
