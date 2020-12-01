@@ -33,29 +33,6 @@ from pymaker.numeric import Wad
 
 from tests.test_governance import mint_approve_lock, launch_chief
 
-# # Launch DS-Chief 1.2
-# def launch_chief(self, mcd: DssDeployment, address: Address):
-#     launchAmount = Wad.from_number(80000)
-#     mint_mkr(mcd.mkr, address, launchAmount)
-#     assert mcd.mkr.balance_of(address) == launchAmount
-#
-#     # Lock 80,000 MKR to launch DS-Chief (1.2)
-#     zero_address = Address("0x0000000000000000000000000000000000000000")
-#     assert mcd.ds_chief.lock(launchAmount).transact(from_address=address)
-#     lockLog = self._past_events(mcd.ds_chief._contract, 'Mint', Etch, number_of_past_blocks, event_filter)
-#
-#     assert mcd.ds_chief.vote_yays([zero_address.address]).transact(from_address=address)
-#
-#     # Launch Ds-Chief (1.2)
-#     launchABI = Contract._load_abi(__name__, 'abi/DSChiefLaunch.abi');
-#     contract = Contract._get_contract(mcd.web3, launchABI, mcd.ds_chief.address)
-#     assert Transact(self, mcd.web3, launchABI, mcd.ds_chief.address, contract, 'launch', []).transact(from_address=address)
-#
-#     # need to give chief approval to move IOU before freeing
-#     # https://github.com/makerdao/pymaker/blob/master/tests/test_governance.py#L88
-#     assert mcd.ds_chief.free(launchAmount).transact(from_address=address)
-
-
 def time_travel_by(web3: Web3, seconds: int):
     assert(isinstance(web3, Web3))
     assert(isinstance(seconds, int))
