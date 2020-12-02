@@ -27,13 +27,11 @@ from web3 import Web3
 from chief_keeper.spell import DSSSpell
 from chief_keeper.database import SimpleDatabase
 
-from pymaker import Address
+from pymaker import Address, Contract, Transact
 from pymaker.deployment import DssDeployment
 from pymaker.numeric import Wad
 
-from tests.test_dss import mint_mkr
-
-
+from tests.test_governance import mint_approve_lock, launch_chief
 
 def time_travel_by(web3: Web3, seconds: int):
     assert(isinstance(web3, Web3))
@@ -76,21 +74,15 @@ class TestSimpleDatabase:
     def test_setup(self, mcd: DssDeployment, our_address: Address, guy_address: Address):
         print_out("test_setup")
 
-        # Give 1000 MKR to our_address
+        launch_chief(mcd, guy_address)
+
+        # Lock 1000 MKR from our_address
         amount = Wad.from_number(1000)
-        mint_mkr(mcd.mkr, our_address, amount)
-        assert mcd.mkr.balance_of(our_address) == amount
+        mint_approve_lock(mcd, amount, our_address)
 
-        #Give 2000 MKR to guy_address
+        # Lock 2000 MKR from guy_address
         guyAmount = Wad.from_number(2000)
-        mint_mkr(mcd.mkr, guy_address, guyAmount)
-        assert mcd.mkr.balance_of(guy_address) == guyAmount
-
-        # Lock MKR in DS-Chief
-        assert mcd.mkr.approve(mcd.ds_chief.address).transact(from_address=our_address)
-        assert mcd.mkr.approve(mcd.ds_chief.address).transact(from_address=guy_address)
-        assert mcd.ds_chief.lock(amount).transact(from_address=our_address)
-        assert mcd.ds_chief.lock(guyAmount).transact(from_address=guy_address)
+        mint_approve_lock(mcd, guyAmount, guy_address)
 
         # Deploy spell
         self.spell = DSSSpell.deploy(mcd.web3, mcd.pause.address, mcd.vat.address)
@@ -101,7 +93,6 @@ class TestSimpleDatabase:
         assert mcd.ds_chief.vote_yays([self.spell.address.address]).transact(from_address=guy_address)
 
         # At this point there are two yays in the chief, one to our_address and the other to the spell address
-
         pytest.global_spell = self.spell
 
 
@@ -111,17 +102,25 @@ class TestSimpleDatabase:
         # unpack the first etch
         etches = mcd.ds_chief.past_etch(3)
         yays = simpledb.unpack_slate(etches[0].slate, 3)
-        verify([our_address.address, guy_address.address], yays, 2)
+        verify([our_address.address,
+                guy_address.address],
+                yays,
+                2)
 
 
-    def test_get_yays(self, mcd: DssDeployment, simpledb: SimpleDatabase, our_address: Address,  guy_address: Address):
+    def test_get_yays(self, mcd: DssDeployment, simpledb: SimpleDatabase, our_address: Address,  guy_address: Address, zero_address: Address):
         print_out("test_get_yays")
 
         yays = simpledb.get_yays(0, mcd.web3.eth.blockNumber)
-        verify([our_address.address, guy_address.address, pytest.global_spell.address.address], yays, 3)
+        verify([our_address.address,
+                guy_address.address,
+                pytest.global_spell.address.address,
+                zero_address.address],
+                yays,
+                4)
 
 
-    def test_get_etas(self, mcd: DssDeployment, simpledb: SimpleDatabase, our_address: Address,  guy_address: Address):
+    def test_get_etas(self, mcd: DssDeployment, simpledb: SimpleDatabase, our_address: Address,  guy_address: Address, zero_address: Address):
         print_out("test_get_etas")
 
         block = mcd.web3.eth.blockNumber
@@ -131,7 +130,7 @@ class TestSimpleDatabase:
         verify([], etas, 0)
 
 
-    def test_initial_query(self, mcd: DssDeployment, simpledb: SimpleDatabase, our_address: Address,  guy_address: Address):
+    def test_initial_query(self, mcd: DssDeployment, simpledb: SimpleDatabase, our_address: Address,  guy_address: Address, zero_address: Address):
         print_out("test_initial_query")
 
         simpledb.create()
@@ -139,11 +138,16 @@ class TestSimpleDatabase:
         yays = simpledb.db.get(doc_id=2)["yays"]
         etas = simpledb.db.get(doc_id=3)["upcoming_etas"]
 
-        verify([our_address.address, guy_address.address, pytest.global_spell.address.address], yays, 3)
+        verify([our_address.address,
+                guy_address.address,
+                pytest.global_spell.address.address,
+                zero_address.address],
+                yays,
+                4)
         verify([], etas, 0)
 
 
-    def test_yays_update(self, mcd: DssDeployment, simpledb: SimpleDatabase, our_address: Address,  guy_address: Address):
+    def test_yays_update(self, mcd: DssDeployment, simpledb: SimpleDatabase, our_address: Address,  guy_address: Address, zero_address: Address):
         print_out("test_yays_update")
 
         # Vote 1000 mkr on our address
@@ -155,11 +159,16 @@ class TestSimpleDatabase:
         yays = simpledb.db.get(doc_id=2)["yays"]
         DBblockNumber = simpledb.db.get(doc_id=1)["last_block_checked_for_yays"]
 
-        verify([our_address.address, guy_address.address, pytest.global_spell.address.address], yays, 3)
+        verify([our_address.address,
+                guy_address.address,
+                pytest.global_spell.address.address,
+                zero_address.address],
+                yays,
+                4)
         assert DBblockNumber == block
 
 
-    def test_etas_update(self, mcd: DssDeployment, simpledb: SimpleDatabase, our_address: Address,  guy_address: Address):
+    def test_etas_update(self, mcd: DssDeployment, simpledb: SimpleDatabase, our_address: Address,  guy_address: Address, zero_address: Address):
         print_out("test_etas_update")
 
         assert mcd.ds_chief.lift(pytest.global_spell.address).transact(from_address=our_address)
