@@ -212,7 +212,7 @@ class ChiefKeeper:
                 self.logger.info(f'Scheduling spell ({yay})')
                 spell.schedule().transact(gas_price=self.gas_price)
         else:
-            self.logger.info(f'Spell is an EOA or 0x0, so keeper will not attempt to call schedule()')
+            self.logger.warning(f'Spell is an EOA or 0x0, so keeper will not attempt to call schedule()')
 
 
     def check_eta(self):
@@ -248,7 +248,7 @@ class ChiefKeeper:
                     else:
                         del etas[yay]
                 else:
-                    self.logger.info(f'Spell is an EOA or 0x0, so keeper will not attempt to call cast()')
+                    self.logger.warning(f'Spell is an EOA or 0x0, so keeper will not attempt to call cast()')
                     del etas[yay]
 
         self.database.db.update({'upcoming_etas': etas}, doc_ids=[3])
