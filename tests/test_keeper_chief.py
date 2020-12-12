@@ -121,7 +121,7 @@ class TestChiefKeeper:
         keeper.check_hat()
         keeper.check_eta()
 
-        # Give 1000 MKR to our_address
+        # Give 5000 MKR to our_address
         amount = Wad.from_number(5000)
         mint_approve_lock(mcd, amount, our_address)
 

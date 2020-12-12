@@ -195,22 +195,24 @@ class ChiefKeeper:
             self.logger.info(f'Old hat ({hat}) with Approvals {hatApprovals}')
             self.logger.info(f'New hat ({contender}) with Approvals {highestApprovals}')
             self.dss.ds_chief.lift(Address(contender)).transact(gas_price=self.gas_price)
-            spell = DSSSpell(self.web3, Address(contender))
         else:
             self.logger.info(f'Current hat ({hat}) with Approvals {hatApprovals}')
-            spell = DSSSpell(self.web3, Address(hat))
 
-        self.check_schedule(spell, yay)
+        # Read the hat; either is equivalent to the contender or old hat
+        hatNew = self.dss.ds_chief.get_hat().address
+        if hatNew != hat:
+            self.logger.info(f'Confirmed ({contender}) now has the hat')
 
+        spell = DSSSpell(self.web3, Address(hatNew)) if is_contract_at(self.web3, Address(hatNew)) else None
 
-    def check_schedule(self, spell: DSSSpell, yay: str):
-        """ Schedules spells that haven't been scheduled nor casted """
-        if is_contract_at(self.web3, Address(yay)):
-
+        # Schedules spells that haven't been scheduled nor casted
+        if spell is not None:
             # Functional with DSSSpells but not DSSpells (not compatiable with DSPause)
             if spell.done() == False and self.database.get_eta_inUnix(spell) == 0:
                 self.logger.info(f'Scheduling spell ({yay})')
                 spell.schedule().transact(gas_price=self.gas_price)
+        else:
+            self.logger.warning(f'Spell is an EOA or 0x0, so keeper will not attempt to call schedule()')
 
 
     def check_eta(self):
@@ -231,15 +233,22 @@ class ChiefKeeper:
 
         for yay in yays:
             if etas[yay] <= now:
-                spell = DSSSpell(self.web3, Address(yay))
 
-                if spell.done() == False:
-                    receipt = spell.cast().transact(gas_price=self.gas_price)
+                spell = DSSSpell(self.web3, Address(yay)) if is_contract_at(self.web3, Address(yay)) else None
 
-                    if receipt is None or receipt.successful == True:
+                if spell is not None:
+
+                    if spell.done() == False:
+
+                        self.logger.info(f'Casting spell ({spell.address.address})')
+                        receipt = spell.cast().transact(gas_price=self.gas_price)
+
+                        if receipt is None or receipt.successful == True:
+                            del etas[yay]
+                    else:
                         del etas[yay]
-
                 else:
+                    self.logger.warning(f'Spell is an EOA or 0x0, so keeper will not attempt to call cast()')
                     del etas[yay]
 
         self.database.db.update({'upcoming_etas': etas}, doc_ids=[3])
