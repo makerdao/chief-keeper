@@ -46,11 +46,8 @@ class ChiefKeeper:
 
         parser = argparse.ArgumentParser("chief-keeper")
 
-        parser.add_argument("--rpc-host", type=str, default="localhost",
-                            help="JSON-RPC host (default: `localhost')")
-
-        parser.add_argument("--rpc-port", type=int, default=8545,
-                            help="JSON-RPC port (default: `8545')")
+        parser.add_argument("--rpc-host", type=str, default="https://localhost:8545",
+                            help="JSON-RPC host:port (default: 'localhost:8545')")
 
         parser.add_argument("--rpc-timeout", type=int, default=10,
                             help="JSON-RPC timeout (in seconds, default: 10)")
