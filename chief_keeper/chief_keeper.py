@@ -26,7 +26,7 @@ from web3 import Web3, HTTPProvider
 from chief_keeper.database import SimpleDatabase
 from chief_keeper.spell import DSSSpell
 
-from pymaker import Address
+from pymaker import Address, web3_via_http
 from pymaker.util import is_contract_at
 from pymaker.gas import DefaultGasPrice
 from pymaker.keys import register_keys
@@ -46,11 +46,8 @@ class ChiefKeeper:
 
         parser = argparse.ArgumentParser("chief-keeper")
 
-        parser.add_argument("--rpc-host", type=str, default="localhost",
-                            help="JSON-RPC host (default: `localhost')")
-
-        parser.add_argument("--rpc-port", type=int, default=8545,
-                            help="JSON-RPC port (default: `8545')")
+        parser.add_argument("--rpc-host", type=str, default="https://localhost:8545",
+                            help="JSON-RPC host:port (default: 'localhost:8545')")
 
         parser.add_argument("--rpc-timeout", type=int, default=10,
                             help="JSON-RPC timeout (in seconds, default: 10)")
@@ -84,8 +81,9 @@ class ChiefKeeper:
         parser.set_defaults(cageFacilitated=False)
         self.arguments = parser.parse_args(args)
 
-        self.web3 = kwargs['web3'] if 'web3' in kwargs else Web3(HTTPProvider(endpoint_uri=f"https://{self.arguments.rpc_host}:{self.arguments.rpc_port}",
-                                                                              request_kwargs={"timeout": self.arguments.rpc_timeout}))
+        self.web3: Web3 = kwargs['web3'] if 'web3' in kwargs else web3_via_http(
+            endpoint_uri=self.arguments.rpc_host, timeout=self.arguments.rpc_timeout, http_pool_size=100)
+
         self.web3.eth.defaultAccount = self.arguments.eth_from
         register_keys(self.web3, self.arguments.eth_key)
         self.our_address = Address(self.arguments.eth_from)
