@@ -1,0 +1,46 @@
+on:
+  push:
+    branches:
+      - master
+
+name: Build and deploy Docker image
+
+jobs:
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+    env:
+      AWS_REGION: us-east-1
+      DOCKER_REPO_NAME: makerdao/chief-keeper
+      SERVICE_NAME: chief-keeper-mainnet-service
+      CLUSTER_NAME: chief-keeper-mainnet-cluster
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+      with:
+        submodules: recursive
+
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ env.AWS_REGION }}
+
+    - name: Login to DockerHub
+      uses: docker/login-action@v1
+      with:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+    - name: Build, tag, and push image to DockerHub
+      id: build-image
+      run: |
+        docker build -t $DOCKER_REPO_NAME .
+        docker push $DOCKER_REPO_NAME
+    - name: Update ECS service with latest Docker image
+      id: service-update
+      run: |
+        aws ecs update-service --cluster $CLUSTER_NAME --service ${{ env.SERVICE_NAME }} --force-new-deployment --region $AWS_REGION
+        aws ecs wait services-stable --cluster $CLUSTER_NAME --services $SERVICE_NAME && echo $? || echo $?

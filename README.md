@@ -1,6 +1,6 @@
 # chief-keeper
 
-[![Build Status](https://travis-ci.org/makerdao/chief-keeper.svg?branch=master)](https://travis-ci.org/makerdao/chief-keeper)
+![Build Status](https://github.com/makerdao/chief-keeper/actions/workflows/.github/workflows/tests.yaml/badge.svg?branch=master)
 [![codecov](https://codecov.io/gh/makerdao/chief-keeper/branch/master/graph/badge.svg)](https://codecov.io/gh/makerdao/chief-keeper)
 
 
