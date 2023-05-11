@@ -181,9 +181,9 @@ class ChiefKeeper:
             level=(logging.DEBUG if self.arguments.debug else logging.INFO),
         )
 
-    def healthy(self, func):
+    def healthy(func):
         @wraps(func)
-        def wrapper(*args, **kwargs):
+        def wrapper(self, *args, **kwargs):
             ts = int(time.time())
             self.logger.info(f"Health-check passed: {ts}")
             with open(self.arguments.health_check_file_path, "w") as f:
