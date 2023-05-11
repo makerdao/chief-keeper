@@ -39,59 +39,122 @@ from auction_keeper.gas import DynamicGasPrice
 class ChiefKeeper:
     """Keeper that lifts the hat and streamlines executive actions"""
 
-    logger = logging.getLogger('chief-keeper')
+    logger = logging.getLogger("chief-keeper")
 
     def __init__(self, args: list, **kwargs):
         """Pass in arguements assign necessary variables/objects and instantiate other Classes"""
 
         parser = argparse.ArgumentParser("chief-keeper")
 
-        parser.add_argument("--rpc-host", type=str, default="https://localhost:8545",
-                            help="JSON-RPC host:port (default: 'localhost:8545')")
+        parser.add_argument(
+            "--rpc-host",
+            type=str,
+            default="https://localhost:8545",
+            help="JSON-RPC host:port (default: 'localhost:8545')",
+        )
 
-        parser.add_argument("--rpc-timeout", type=int, default=10,
-                            help="JSON-RPC timeout (in seconds, default: 10)")
+        parser.add_argument(
+            "--rpc-timeout",
+            type=int,
+            default=10,
+            help="JSON-RPC timeout (in seconds, default: 10)",
+        )
 
-        parser.add_argument("--network", type=str, required=True,
-                            help="Network that you're running the Keeper on (options, 'mainnet', 'kovan', 'testnet')")
+        parser.add_argument(
+            "--network",
+            type=str,
+            required=True,
+            help="Network that you're running the Keeper on (options, 'mainnet', 'kovan', 'testnet')",
+        )
 
-        parser.add_argument("--eth-from", type=str, required=True,
-                            help="Ethereum address from which to send transactions; checksummed (e.g. '0x12AebC')")
+        parser.add_argument(
+            "--eth-from",
+            type=str,
+            required=True,
+            help="Ethereum address from which to send transactions; checksummed (e.g. '0x12AebC')",
+        )
 
-        parser.add_argument("--eth-key", type=str, nargs='*',
-                            help="Ethereum private key(s) to use (e.g. 'key_file=/path/to/keystore.json,pass_file=/path/to/passphrase.txt')")
+        parser.add_argument(
+            "--eth-key",
+            type=str,
+            nargs="*",
+            help="Ethereum private key(s) to use (e.g. 'key_file=/path/to/keystore.json,pass_file=/path/to/passphrase.txt')",
+        )
 
-        parser.add_argument("--dss-deployment-file", type=str, required=False,
-                            help="Json description of all the system addresses (e.g. /Full/Path/To/configFile.json)")
+        parser.add_argument(
+            "--dss-deployment-file",
+            type=str,
+            required=False,
+            help="Json description of all the system addresses (e.g. /Full/Path/To/configFile.json)",
+        )
 
-        parser.add_argument("--chief-deployment-block", type=int, required=False, default=0,
-                            help=" Block that the Chief from dss-deployment-file was deployed at (e.g. 8836668")
+        parser.add_argument(
+            "--chief-deployment-block",
+            type=int,
+            required=False,
+            default=0,
+            help=" Block that the Chief from dss-deployment-file was deployed at (e.g. 8836668",
+        )
 
-        parser.add_argument("--max-errors", type=int, default=100,
-                            help="Maximum number of allowed errors before the keeper terminates (default: 100)")
+        parser.add_argument(
+            "--max-errors",
+            type=int,
+            default=100,
+            help="Maximum number of allowed errors before the keeper terminates (default: 100)",
+        )
 
-        parser.add_argument("--debug", dest='debug', action='store_true',
-                            help="Enable debug output")
+        parser.add_argument(
+            "--debug", dest="debug", action="store_true", help="Enable debug output"
+        )
 
-        parser.add_argument("--ethgasstation-api-key", type=str, default=None, help="ethgasstation API key")
-        parser.add_argument("--gas-initial-multiplier", type=str, default=1.0, help="ethgasstation API key")
-        parser.add_argument("--gas-reactive-multiplier", type=str, default=2.25, help="gas strategy tuning")
-        parser.add_argument("--gas-maximum", type=str, default=5000, help="gas strategy tuning")
+        parser.add_argument(
+            "--ethgasstation-api-key",
+            type=str,
+            default=None,
+            help="ethgasstation API key",
+        )
+        parser.add_argument(
+            "--gas-initial-multiplier",
+            type=str,
+            default=1.0,
+            help="ethgasstation API key",
+        )
+        parser.add_argument(
+            "--gas-reactive-multiplier",
+            type=str,
+            default=2.25,
+            help="gas strategy tuning",
+        )
+        parser.add_argument(
+            "--gas-maximum", type=str, default=5000, help="gas strategy tuning"
+        )
 
         parser.set_defaults(cageFacilitated=False)
         self.arguments = parser.parse_args(args)
 
-        self.web3: Web3 = kwargs['web3'] if 'web3' in kwargs else web3_via_http(
-            endpoint_uri=self.arguments.rpc_host, timeout=self.arguments.rpc_timeout, http_pool_size=100)
+        self.web3: Web3 = (
+            kwargs["web3"]
+            if "web3" in kwargs
+            else web3_via_http(
+                endpoint_uri=self.arguments.rpc_host,
+                timeout=self.arguments.rpc_timeout,
+                http_pool_size=100,
+            )
+        )
 
         self.web3.eth.defaultAccount = self.arguments.eth_from
         register_keys(self.web3, self.arguments.eth_key)
         self.our_address = Address(self.arguments.eth_from)
 
         if self.arguments.dss_deployment_file:
-            self.dss = DssDeployment.from_json(web3=self.web3, conf=open(self.arguments.dss_deployment_file, "r").read())
+            self.dss = DssDeployment.from_json(
+                web3=self.web3,
+                conf=open(self.arguments.dss_deployment_file, "r").read(),
+            )
         else:
-            self.dss = DssDeployment.from_network(web3=self.web3, network=self.arguments.network)
+            self.dss = DssDeployment.from_network(
+                web3=self.web3, network=self.arguments.network
+            )
 
         self.deployment_block = self.arguments.chief_deployment_block
 
@@ -106,13 +169,13 @@ class ChiefKeeper:
         else:
             self.gas_price = DefaultGasPrice()
 
-
-        logging.basicConfig(format='%(asctime)-15s %(levelname)-8s %(message)s',
-                            level=(logging.DEBUG if self.arguments.debug else logging.INFO))
-
+        logging.basicConfig(
+            format="%(asctime)-15s %(levelname)-8s %(message)s",
+            level=(logging.DEBUG if self.arguments.debug else logging.INFO),
+        )
 
     def main(self):
-        """ Initialize the lifecycle and enter into the Keeper Lifecycle controller.
+        """Initialize the lifecycle and enter into the Keeper Lifecycle controller.
 
         Each function supplied by the lifecycle will accept a callback function that will be executed.
         The lifecycle.on_block() function will enter into an infinite loop, but will gracefully shutdown
@@ -124,35 +187,35 @@ class ChiefKeeper:
             lifecycle.on_startup(self.check_deployment)
             lifecycle.on_block(self.process_block)
 
-
     def check_deployment(self):
-        self.logger.info('')
-        self.logger.info('Please confirm the deployment details')
-        self.logger.info(f'Keeper Balance: {self.web3.eth.getBalance(self.our_address.address) / (10**18)} ETH')
-        self.logger.info(f'DS-Chief: {self.dss.ds_chief.address}')
-        self.logger.info(f'DS-Pause: {self.dss.pause.address}')
-        self.logger.info('')
+        self.logger.info("")
+        self.logger.info("Please confirm the deployment details")
+        self.logger.info(
+            f"Keeper Balance: {self.web3.eth.getBalance(self.our_address.address) / (10**18)} ETH"
+        )
+        self.logger.info(f"DS-Chief: {self.dss.ds_chief.address}")
+        self.logger.info(f"DS-Pause: {self.dss.pause.address}")
+        self.logger.info("")
         self.initial_query()
 
-
     def initial_query(self):
-        """ Updates a locally stored database with the DS-Chief state since its last update.
+        """Updates a locally stored database with the DS-Chief state since its last update.
         If a local database is not found, create one and query the DS-Chief state since its deployment.
         """
-        self.logger.info('')
-        self.logger.info('Querying DS-Chief state since last update ( !! Could take up to 15 minutes !! )')
+        self.logger.info("")
+        self.logger.info(
+            "Querying DS-Chief state since last update ( !! Could take up to 15 minutes !! )"
+        )
 
-        self.database = SimpleDatabase(self.web3,
-                                       self.deployment_block,
-                                       self.arguments.network,
-                                       self.dss)
+        self.database = SimpleDatabase(
+            self.web3, self.deployment_block, self.arguments.network, self.dss
+        )
         result = self.database.create()
 
         self.logger.info(result)
 
-
     def process_block(self):
-        """ Callback called on each new block. If too many errors, terminate the keeper.
+        """Callback called on each new block. If too many errors, terminate the keeper.
         This is the entrypoint to the Keeper's monitoring logic
         """
         if self.errors >= self.max_errors:
@@ -161,9 +224,8 @@ class ChiefKeeper:
             self.check_hat()
             self.check_eta()
 
-
     def check_hat(self):
-        """ Ensures the Hat is on the proposal (spell, EOA, multisig, etc) with the most approval.
+        """Ensures the Hat is on the proposal (spell, EOA, multisig, etc) with the most approval.
 
         First, the local database is updated with proposal addresses (yays) that have been `etched` in DSChief between
         the last block reviewed and the most recent block receieved. Next, it simply traverses through each address,
@@ -172,7 +234,7 @@ class ChiefKeeper:
         If the current or new hat hasn't been casted nor plotted in the pause, it will `schedule` the spell
         """
         blockNumber = self.web3.eth.blockNumber
-        self.logger.info(f'Checking Hat on block {blockNumber}')
+        self.logger.info(f"Checking Hat on block {blockNumber}")
 
         self.database.update_db_yays(blockNumber)
         yays = self.database.db.get(doc_id=2)["yays"]
@@ -189,32 +251,39 @@ class ChiefKeeper:
                 highestApprovals = contenderApprovals
 
         if contender != hat:
-            self.logger.info(f'Lifting hat')
-            self.logger.info(f'Old hat ({hat}) with Approvals {hatApprovals}')
-            self.logger.info(f'New hat ({contender}) with Approvals {highestApprovals}')
-            self.dss.ds_chief.lift(Address(contender)).transact(gas_price=self.gas_price)
+            self.logger.info(f"Lifting hat")
+            self.logger.info(f"Old hat ({hat}) with Approvals {hatApprovals}")
+            self.logger.info(f"New hat ({contender}) with Approvals {highestApprovals}")
+            self.dss.ds_chief.lift(Address(contender)).transact(
+                gas_price=self.gas_price
+            )
         else:
-            self.logger.info(f'Current hat ({hat}) with Approvals {hatApprovals}')
+            self.logger.info(f"Current hat ({hat}) with Approvals {hatApprovals}")
 
         # Read the hat; either is equivalent to the contender or old hat
         hatNew = self.dss.ds_chief.get_hat().address
         if hatNew != hat:
-            self.logger.info(f'Confirmed ({contender}) now has the hat')
+            self.logger.info(f"Confirmed ({contender}) now has the hat")
 
-        spell = DSSSpell(self.web3, Address(hatNew)) if is_contract_at(self.web3, Address(hatNew)) else None
+        spell = (
+            DSSSpell(self.web3, Address(hatNew))
+            if is_contract_at(self.web3, Address(hatNew))
+            else None
+        )
 
         # Schedules spells that haven't been scheduled nor casted
         if spell is not None:
             # Functional with DSSSpells but not DSSpells (not compatiable with DSPause)
             if spell.done() == False and self.database.get_eta_inUnix(spell) == 0:
-                self.logger.info(f'Scheduling spell ({yay})')
+                self.logger.info(f"Scheduling spell ({yay})")
                 spell.schedule().transact(gas_price=self.gas_price)
         else:
-            self.logger.warning(f'Spell is an EOA or 0x0, so keeper will not attempt to call schedule()')
-
+            self.logger.warning(
+                f"Spell is an EOA or 0x0, so keeper will not attempt to call schedule()"
+            )
 
     def check_eta(self):
-        """ Cast spells that meet their schedule.
+        """Cast spells that meet their schedule.
 
         First, the local database is updated with spells that have been scheduled between the last block
         reviewed and the most recent block receieved. Next, it simply traverses through each spell address,
@@ -222,7 +291,7 @@ class ChiefKeeper:
         """
         blockNumber = self.web3.eth.blockNumber
         now = self.web3.eth.getBlock(blockNumber).timestamp
-        self.logger.info(f'Checking scheduled spells on block {blockNumber}')
+        self.logger.info(f"Checking scheduled spells on block {blockNumber}")
 
         self.database.update_db_etas(blockNumber)
         etas = self.database.db.get(doc_id=3)["upcoming_etas"]
@@ -231,14 +300,15 @@ class ChiefKeeper:
 
         for yay in yays:
             if etas[yay] <= now:
-
-                spell = DSSSpell(self.web3, Address(yay)) if is_contract_at(self.web3, Address(yay)) else None
+                spell = (
+                    DSSSpell(self.web3, Address(yay))
+                    if is_contract_at(self.web3, Address(yay))
+                    else None
+                )
 
                 if spell is not None:
-
                     if spell.done() == False:
-
-                        self.logger.info(f'Casting spell ({spell.address.address})')
+                        self.logger.info(f"Casting spell ({spell.address.address})")
                         receipt = spell.cast().transact(gas_price=self.gas_price)
 
                         if receipt is None or receipt.successful == True:
@@ -246,11 +316,13 @@ class ChiefKeeper:
                     else:
                         del etas[yay]
                 else:
-                    self.logger.warning(f'Spell is an EOA or 0x0, so keeper will not attempt to call cast()')
+                    self.logger.warning(
+                        f"Spell is an EOA or 0x0, so keeper will not attempt to call cast()"
+                    )
                     del etas[yay]
 
-        self.database.db.update({'upcoming_etas': etas}, doc_ids=[3])
+        self.database.db.update({"upcoming_etas": etas}, doc_ids=[3])
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     ChiefKeeper(sys.argv[1:]).main()
