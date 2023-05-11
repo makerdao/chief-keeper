@@ -35,19 +35,6 @@ from pymaker.deployment import DssDeployment
 
 from auction_keeper.gas import DynamicGasPrice
 
-HEALTHCHECK_FILE_PATH = "/tmp/health.log"
-
-
-def healthy(func):
-    def wrapper(*args, **kwargs):
-        ts = int(time.time())
-        print(f"[{ts}] - healthy")
-        with open(HEALTHCHECK_FILE_PATH, "w") as f:
-            f.write(str(ts) + "\n")
-        return func(*args, **kwargs)
-
-    return wrapper
-
 
 class ChiefKeeper:
     """Keeper that lifts the hat and streamlines executive actions"""
@@ -141,7 +128,12 @@ class ChiefKeeper:
         parser.add_argument(
             "--gas-maximum", type=str, default=5000, help="gas strategy tuning"
         )
-
+        parser.add_argument(
+            "--health-check-file-path",
+            type=str,
+            default="/tmp/health.log",
+            help="path to health-check file",
+        )
         parser.set_defaults(cageFacilitated=False)
         self.arguments = parser.parse_args(args)
 
@@ -186,6 +178,17 @@ class ChiefKeeper:
             format="%(asctime)-15s %(levelname)-8s %(message)s",
             level=(logging.DEBUG if self.arguments.debug else logging.INFO),
         )
+
+    @staticmethod
+    def healthy(func):
+        def wrapper(self, *args, **kwargs):
+            ts = int(time.time())
+            self.logger.info(f"Health-check passed: {ts}")
+            with open(self.arguments.health_check_file_path, "w") as f:
+                f.write(str(ts) + "\n")
+            return func(*args, **kwargs)
+
+        return wrapper
 
     def main(self):
         """Initialize the lifecycle and enter into the Keeper Lifecycle controller.
