@@ -39,13 +39,14 @@ HEALTHCHECK_FILE_PATH = "/tmp/health.log"
 
 
 def healthy(func):
-    def inner():
-        print("==================== Healthcheck ====================")
-        with open(HEALTHCHECK_FILE_PATH, "W") as healthcheck_file:
-            healthcheck_file.write(int(time.time()))
-        func()
+    def wrapper(*args, **kwargs):
+        ts = int(time.time())
+        print(f"[{ts}] - healthy")
+        with open(HEALTHCHECK_FILE_PATH, "w") as f:
+            f.write(str(ts) + "\n")
+        return func(*args, **kwargs)
 
-    return inner
+    return wrapper
 
 
 class ChiefKeeper:
