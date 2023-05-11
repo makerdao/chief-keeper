@@ -179,7 +179,6 @@ class ChiefKeeper:
             level=(logging.DEBUG if self.arguments.debug else logging.INFO),
         )
 
-    @staticmethod
     def healthy(func):
         def wrapper(self, *args, **kwargs):
             ts = int(time.time())
