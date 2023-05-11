@@ -1,6 +1,7 @@
 FROM python:3.6.6
 
-RUN groupadd -r keeper && useradd -d /home/keeper -m --no-log-init -r -g keeper keeper && \
+RUN echo "deb http://archive.debian.org/debian stretch main" > /etc/apt/sources.list && \
+    groupadd -r keeper && useradd -d /home/keeper -m --no-log-init -r -g keeper keeper && \
     apt-get -y update && \
     apt-get -y install python3-pip jshon jq virtualenv pkg-config openssl libssl-dev autoconf libtool libsecp256k1-dev && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
