@@ -35,6 +35,8 @@ from pymaker.deployment import DssDeployment
 
 from auction_keeper.gas import DynamicGasPrice
 
+from functools import wraps
+
 
 class ChiefKeeper:
     """Keeper that lifts the hat and streamlines executive actions"""
@@ -179,8 +181,9 @@ class ChiefKeeper:
             level=(logging.DEBUG if self.arguments.debug else logging.INFO),
         )
 
-    def healthy(func):
-        def wrapper(self, *args, **kwargs):
+    def healthy(self, func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
             ts = int(time.time())
             self.logger.info(f"Health-check passed: {ts}")
             with open(self.arguments.health_check_file_path, "w") as f:
