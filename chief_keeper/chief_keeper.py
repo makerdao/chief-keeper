@@ -35,6 +35,18 @@ from pymaker.deployment import DssDeployment
 
 from auction_keeper.gas import DynamicGasPrice
 
+HEALTHCHECK_FILE_PATH = "/tmp/health.log"
+
+
+def healthy(func):
+    def inner():
+        print("==================== Healthcheck ====================")
+        with open(HEALTHCHECK_FILE_PATH, "W") as healthcheck_file:
+            healthcheck_file.write(int(time.time()))
+        func()
+
+    return inner
+
 
 class ChiefKeeper:
     """Keeper that lifts the hat and streamlines executive actions"""
@@ -214,6 +226,7 @@ class ChiefKeeper:
 
         self.logger.info(result)
 
+    @healthy
     def process_block(self):
         """Callback called on each new block. If too many errors, terminate the keeper.
         This is the entrypoint to the Keeper's monitoring logic
