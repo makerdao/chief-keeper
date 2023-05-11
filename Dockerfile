@@ -1,4 +1,4 @@
-FROM python:3.6.6
+FROM python:3.7-buster
 
 RUN echo "deb http://archive.debian.org/debian stretch main" > /etc/apt/sources.list && \
     groupadd -r keeper && useradd -d /home/keeper -m --no-log-init -r -g keeper keeper && \
