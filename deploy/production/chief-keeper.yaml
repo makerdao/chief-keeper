@@ -1,0 +1,68 @@
+replicaCount: 1
+service:
+  name: chief-keeper
+  port: 8080
+  type: ClusterIP
+  containerPort: 8080
+  tls:
+    enabled: false
+image:
+  pullPolicy: Always
+serviceAccount:
+  create: false
+ingress:
+  enabled: false
+podAnnotations:
+  reloader.stakater.com/auto: "true"
+resources:
+  limits:
+    cpu: 500m
+    memory: 1024Mi
+  requests:
+    cpu: 250m
+    memory: 512Mi
+autoscaling:
+  enabled: false
+env:
+  SERVER_ETH_RPC_HOST:
+    type: kv
+    value: https://geth1.mainnet.makerops.services/rpc
+  ETH_ACCOUNT_KEY:
+    type: kv
+    value: "key_file=/opt/keeper/chief-keeper/secrets/keystore.json,pass_file=/opt/keeper/chief-keeper/secrets/password.txt"
+  BLOCKCHAIN_NETWORK:
+    type: kv
+    value: mainnet
+  CHIEF_DEPLOYMENT_BLOCK:
+    type: kv
+    value: 14374534
+  ETH_FROM_ADDRESS:
+    type: parameterStore
+    name: eth-from-addr-mainnet
+    parameter_name: /eks/maker-prod/chief-keeper/eth-from-addr-mainnet
+  SECRET_KEY:
+    type: parameterStore
+    name: secret-key-mainnet
+    parameter_name: /eks/maker-prod/chief-keeper/secret-key-mainnet
+  SECRET_PASS:
+    type: parameterStore
+    name: secret-pass-mainnet
+    parameter_name: /eks/maker-prod/chief-keeper/secret-pass-mainnet
+externalSecrets:
+  clusterSecretStoreName: maker-prod
+livenessProbe:
+  exec:
+    command:
+      - /bin/sh
+      - -c
+      - ps -ef | grep chief-keeper
+  initialDelaySeconds: 5
+  periodSeconds: 30
+readinessProbe:
+  exec:
+    command:
+      - /bin/sh
+      - -c
+      - ps -ef | grep chief-keeper
+  initialDelaySeconds: 5
+  periodSeconds: 30
