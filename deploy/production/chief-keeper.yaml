@@ -26,16 +26,16 @@ autoscaling:
 env:
   SERVER_ETH_RPC_HOST:
     type: kv
-    value: https://geth1.mainnet.makerops.services/rpc
+    value: "https://geth1.mainnet.makerops.services/rpc"
   ETH_ACCOUNT_KEY:
     type: kv
     value: "key_file=/opt/keeper/chief-keeper/secrets/keystore.json,pass_file=/opt/keeper/chief-keeper/secrets/password.txt"
   BLOCKCHAIN_NETWORK:
     type: kv
-    value: mainnet
+    value: "mainnet"
   CHIEF_DEPLOYMENT_BLOCK:
     type: kv
-    value: 14374534
+    value: "14374534"
   ETH_FROM_ADDRESS:
     type: parameterStore
     name: eth-from-addr-mainnet
