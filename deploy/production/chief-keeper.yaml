@@ -27,6 +27,9 @@ env:
   SERVER_ETH_RPC_HOST:
     type: kv
     value: "https://geth1.mainnet.makerops.services/rpc"
+  RPC_HOST_TIMEOUT:
+    type: kv
+    value: "30"
   ETH_ACCOUNT_KEY:
     type: kv
     value: "key_file=/opt/keeper/chief-keeper/secrets/keystore.json,pass_file=/opt/keeper/chief-keeper/secrets/password.txt"
