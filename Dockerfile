@@ -7,9 +7,9 @@ RUN groupadd -r keeper && useradd -d /home/keeper -m --no-log-init -r -g keeper 
 
 WORKDIR /opt/keeper
 
-RUN git clone https://github.com/makerdao/chief-keeper.git && \
-    cd chief-keeper && \
-    git submodule update --init --recursive && \
+COPY . /opt/keeper
+
+RUN git submodule update --init --recursive && \
     pip3 install virtualenv && \
     ./install.sh
 
