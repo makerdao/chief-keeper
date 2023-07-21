@@ -52,5 +52,5 @@ jobs:
         timeout: 5m0s
         name: chief-keeper
         chart-repository: https://makerops.github.io/helm-charts
-        version: 0.0.10
+        version: 0.0.14
         atomic: true
