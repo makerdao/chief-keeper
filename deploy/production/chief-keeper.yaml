@@ -6,6 +6,21 @@ service:
   containerPort: 8080
   tls:
     enabled: false
+deployment:
+  enabled: true
+  volumes:
+    - name: db
+      mountPath: /opt/keeper/chief-keeper/chief_keeper/database
+      provisioner: efs.csi.aws.com
+      accessModes:
+        - ReadWriteMany
+      resources:
+        requests:
+          storage: 5Gi
+      parameters:
+        provisioningMode: efs-ap
+        fileSystemId: fs-01b6896d4c2a6deb6
+        directoryPerms: "700"
 image:
   pullPolicy: Always
 serviceAccount:
