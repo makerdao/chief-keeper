@@ -34,9 +34,15 @@ then
 
 fi
 
+if [[ -n "${RPC_HOST_TIMEOUT}" ]]; then
+  RPC_HOST_TIMEOUT=${RPC_HOST_TIMEOUT}
+else
+  RPC_HOST_TIMEOUT=10
+fi
 
 exec $dir/bin/chief-keeper \
   --rpc-host "${SERVER_ETH_RPC_HOST}" \
+  --rpc-timeout "${RPC_HOST_TIMEOUT}" \
   --network "${BLOCKCHAIN_NETWORK}" \
   --eth-from "${ETH_FROM_ADDRESS}" \
   --eth-key "${ETH_ACCOUNT_KEY}" \
