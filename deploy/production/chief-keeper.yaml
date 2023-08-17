@@ -20,7 +20,7 @@ deployment:
       parameters:
         provisioningMode: efs-ap
         fileSystemId: fs-01b6896d4c2a6deb6
-        directoryPerms: "700"
+        directoryPerms: '700'
 image:
   pullPolicy: Always
 serviceAccount:
@@ -28,7 +28,7 @@ serviceAccount:
 ingress:
   enabled: false
 podAnnotations:
-  reloader.stakater.com/auto: "true"
+  reloader.stakater.com/auto: 'true'
 resources:
   limits:
     cpu: 500m
@@ -41,19 +41,19 @@ autoscaling:
 env:
   SERVER_ETH_RPC_HOST:
     type: kv
-    value: "https://geth1.mainnet.makerops.services/rpc"
+    value: 'https://geth3.mainnet.makerops.services/rpc'
   RPC_HOST_TIMEOUT:
     type: kv
-    value: "120"
+    value: '120'
   ETH_ACCOUNT_KEY:
     type: kv
-    value: "key_file=/opt/keeper/chief-keeper/secrets/keystore.json,pass_file=/opt/keeper/chief-keeper/secrets/password.txt"
+    value: 'key_file=/opt/keeper/chief-keeper/secrets/keystore.json,pass_file=/opt/keeper/chief-keeper/secrets/password.txt'
   BLOCKCHAIN_NETWORK:
     type: kv
-    value: "mainnet"
+    value: 'mainnet'
   CHIEF_DEPLOYMENT_BLOCK:
     type: kv
-    value: "14374534"
+    value: '14374534'
   ETH_FROM_ADDRESS:
     type: parameterStore
     name: eth-from-addr-mainnet
