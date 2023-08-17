@@ -46,10 +46,10 @@ jobs:
         values: image.repository=${{ env.DOCKER_IMAGE_REGISTRY }},image.tag=${{ env.DOCKER_IMAGE_TAG }}
         cluster-name: ${{ env.CLUSTER_NAME }}
         config-files: deploy/production/chief-keeper.yaml
-        chart-path: makerops/common
+        chart-path: techops-services/common
         namespace: keepers
         timeout: 5m0s
         name: chief-keeper
-        chart-repository: https://makerops.github.io/helm-charts
+        chart-repository: https://techops-services.github.io/helm-charts
         version: 0.0.14
         atomic: true

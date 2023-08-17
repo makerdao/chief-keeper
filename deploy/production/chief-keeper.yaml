@@ -41,7 +41,7 @@ autoscaling:
 env:
   SERVER_ETH_RPC_HOST:
     type: kv
-    value: "https://geth1.mainnet.makerops.services/rpc"
+    value: "https://geth3.mainnet.makerops.services/rpc"
   RPC_HOST_TIMEOUT:
     type: kv
     value: "120"
