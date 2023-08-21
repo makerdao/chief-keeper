@@ -40,8 +40,9 @@ autoscaling:
   enabled: false
 env:
   SERVER_ETH_RPC_HOST:
-    type: kv
-    value: "https://geth3.mainnet.makerops.services/rpc"
+    type: parameterStore
+    name: server-eth-rpc-host
+    parameter_name: /eks/maker-prod/chief-keeper/server-eth-rpc-host
   RPC_HOST_TIMEOUT:
     type: kv
     value: "120"
