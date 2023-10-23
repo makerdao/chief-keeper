@@ -64,7 +64,8 @@ class ChiefKeeper:
             "--rpc-host",
             type=str,
             required=True,
-            help="JSON-RPC host URL",
+            default="https://localhost:8545",
+            help="JSON-RPC host:port (default: 'localhost:8545')",
         )
 
         parser.add_argument(
@@ -131,8 +132,8 @@ class ChiefKeeper:
         parser.add_argument(
             "--blocknative-api-key",
             type=str,
-            required=True,
-            help="Blocknative key",
+            default=None,
+            help="Blocknative API key",
         )
 
         parser.add_argument(
