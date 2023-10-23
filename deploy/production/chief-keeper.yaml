@@ -67,6 +67,10 @@ env:
     type: parameterStore
     name: secret-pass-mainnet
     parameter_name: /eks/maker-prod/chief-keeper/secret-pass-mainnet
+  BLOCKNATIVE_API_KEY:
+    type: parameterStore
+    name: blocknative-api-key
+    parameter_name: /eks/maker-prod/chief-keeper/blocknative-api-key
 externalSecrets:
   clusterSecretStoreName: maker-prod
 livenessProbe:

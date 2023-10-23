@@ -122,13 +122,6 @@ class ChiefKeeper:
         )
 
         parser.add_argument(
-            "--ethgasstation-api-key",
-            type=str,
-            default=None,
-            help="ethgasstation API key",
-        )
-
-        parser.add_argument(
             "--blocknative-api-key",
             type=str,
             default=None,
@@ -139,7 +132,7 @@ class ChiefKeeper:
             "--gas-initial-multiplier",
             type=str,
             default=1.0,
-            help="ethgasstation API key",
+            help="gas multiplier",
         )
         parser.add_argument(
             "--gas-reactive-multiplier",
