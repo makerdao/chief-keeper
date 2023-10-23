@@ -1,14 +1,31 @@
-#!/usr/bin/env bash
+#!/bin/bash
+#cd "$(dirname "$0")"
 
-cd "$(dirname "$0")"
+if [[ "$0" = "$BASH_SOURCE" ]]; then
+    echo "Needs to be run using source: . install.sh"
 
-set -e
+else
+    rm -rf _virtualenv
+    virtualenv _virtualenv -p /usr/local/bin/python3.8
+    VENVPATH="_virtualenv/bin/activate"
+    if [[ $# -eq 1 ]]; then 
+        if [ -d $1 ]; then
+            VENVPATH="$1/bin/activate"
+        else
+            echo "Virtual environment $1 not found"
+            return
+        fi
 
-rm -rf _virtualenv
-virtualenv --python=`which python3` _virtualenv
-. _virtualenv/bin/activate
+    elif [ -d "_virtualenv" ]; then 
+        VENVPATH="_virtualenv/bin/activate"
 
-# The advantage of using this method, in contrary to just calling `pip3 install -r requirements.txt` several times,
-# is that it can detect different versions of the same dependency and fail with a "Double requirement given"
-# error message.
-pip install $(cat requirements.txt $(find lib -name requirements.txt | sort) | sort | uniq | sed 's/ *== */==/g')
+    elif [-d "env"]; then 
+        VENVPATH="env/bin/activate"
+    fi
+
+    echo "Activating virtual environment $VENVPATH"
+    source "$VENVPATH"
+fi
+
+python --version
+pip3 install -r requirements.txt

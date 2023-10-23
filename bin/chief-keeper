@@ -4,6 +4,6 @@ dir="$(dirname "$0")"/..
 
 . $dir/_virtualenv/bin/activate || exit
 
-export PYTHONPATH=$PYTHONPATH:$dir:$dir/lib/pymaker:$dir/lib/auction-keeper:$dir/lib/pygasprice-client
+export PYTHONPATH=$PYTHONPATH:$dir:$dir/lib/pymaker
 
 exec python3 -m chief_keeper.chief_keeper $@

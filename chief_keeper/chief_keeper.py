@@ -18,6 +18,7 @@
 import argparse
 import logging
 import sys
+import requests
 import time
 import types
 
@@ -28,12 +29,12 @@ from chief_keeper.spell import DSSSpell
 
 from pymaker import Address, web3_via_http
 from pymaker.util import is_contract_at
-from pymaker.gas import DefaultGasPrice
+from pymaker.gas import GeometricGasPrice
 from pymaker.keys import register_keys
 from pymaker.lifecycle import Lifecycle
 from pymaker.deployment import DssDeployment
 
-from auction_keeper.gas import DynamicGasPrice
+# from auction_keeper.gas import DynamicGasPrice
 
 HEALTHCHECK_FILE_PATH = "/tmp/health.log"
 
@@ -62,15 +63,15 @@ class ChiefKeeper:
         parser.add_argument(
             "--rpc-host",
             type=str,
-            default="https://localhost:8545",
-            help="JSON-RPC host:port (default: 'localhost:8545')",
+            required=True,
+            help="JSON-RPC host URL",
         )
 
         parser.add_argument(
             "--rpc-timeout",
             type=int,
-            default=10,
-            help="JSON-RPC timeout (in seconds, default: 10)",
+            default=60,
+            help="JSON-RPC timeout (in seconds, default: 60)",
         )
 
         parser.add_argument(
@@ -126,6 +127,14 @@ class ChiefKeeper:
             default=None,
             help="ethgasstation API key",
         )
+
+        parser.add_argument(
+            "--blocknative-api-key",
+            type=str,
+            required=True,
+            help="Blocknative key",
+        )
+
         parser.add_argument(
             "--gas-initial-multiplier",
             type=str,
@@ -145,19 +154,15 @@ class ChiefKeeper:
         parser.set_defaults(cageFacilitated=False)
         self.arguments = parser.parse_args(args)
 
-        self.web3: Web3 = (
-            kwargs["web3"]
-            if "web3" in kwargs
-            else web3_via_http(
-                endpoint_uri=self.arguments.rpc_host,
-                timeout=self.arguments.rpc_timeout,
-                http_pool_size=100,
-            )
-        )
+        self.web3 = kwargs['web3'] if 'web3' in kwargs else Web3(HTTPProvider(endpoint_uri=self.arguments.rpc_host,
+                                                                      request_kwargs={"timeout": self.arguments.rpc_timeout}))
 
         self.web3.eth.defaultAccount = self.arguments.eth_from
         register_keys(self.web3, self.arguments.eth_key)
         self.our_address = Address(self.arguments.eth_from)
+
+        isConnected = self.web3.isConnected()
+        print(f'web3 isConntected is: {isConnected}')
 
         if self.arguments.dss_deployment_file:
             self.dss = DssDeployment.from_json(
@@ -168,19 +173,13 @@ class ChiefKeeper:
             self.dss = DssDeployment.from_network(
                 web3=self.web3, network=self.arguments.network
             )
-
+            print(f"DS-Chief: {self.dss.ds_chief.address}")
         self.deployment_block = self.arguments.chief_deployment_block
 
         self.max_errors = self.arguments.max_errors
         self.errors = 0
 
         self.confirmations = 0
-
-        # Create dynamic gas strategy
-        if self.arguments.ethgasstation_api_key:
-            self.gas_price = DynamicGasPrice(self.arguments, self.web3)
-        else:
-            self.gas_price = DefaultGasPrice()
 
         logging.basicConfig(
             format="%(asctime)-15s %(levelname)-8s %(message)s",
@@ -227,11 +226,34 @@ class ChiefKeeper:
 
         self.logger.info(result)
 
+    @staticmethod
+    def get_initial_tip(arguments) -> int:
+        try:
+            result = requests.get(
+                url='https://api.blocknative.com/gasprices/blockprices',
+                headers={
+                    'Authorization': arguments.blocknative_api_key
+                },
+                timeout=15
+            )
+            if result.ok and result.content:
+                confidence_80_tip = result.json().get('blockPrices')[0]['estimatedPrices'][3]['maxPriorityFeePerGas']
+                logging.info(f"Using Blocknative 80% confidence tip {confidence_80_tip}")
+                return int(confidence_80_tip * GeometricGasPrice.GWEI)
+        except Exception as e:
+            logging.error(str(e))
+
+        return int(1.5 * GeometricGasPrice.GWEI)
+
+
     @healthy
     def process_block(self):
         """Callback called on each new block. If too many errors, terminate the keeper.
         This is the entrypoint to the Keeper's monitoring logic
         """
+        isConnected = self.web3.isConnected()
+        logging.info(f'web3 isConntected is: {isConnected}')
+
         if self.errors >= self.max_errors:
             self.lifecycle.terminate()
         else:
@@ -269,7 +291,7 @@ class ChiefKeeper:
             self.logger.info(f"Old hat ({hat}) with Approvals {hatApprovals}")
             self.logger.info(f"New hat ({contender}) with Approvals {highestApprovals}")
             self.dss.ds_chief.lift(Address(contender)).transact(
-                gas_price=self.gas_price
+                gas_strategy=gas_strategy
             )
         else:
             self.logger.info(f"Current hat ({hat}) with Approvals {hatApprovals}")
@@ -287,10 +309,16 @@ class ChiefKeeper:
 
         # Schedules spells that haven't been scheduled nor casted
         if spell is not None:
+            gas_strategy = GeometricGasPrice(
+                web3=self.web3,
+                initial_price=None,
+                initial_tip=self.get_initial_tip(self.arguments),
+                every_secs=180
+            )
             # Functional with DSSSpells but not DSSpells (not compatiable with DSPause)
             if spell.done() == False and self.database.get_eta_inUnix(spell) == 0:
                 self.logger.info(f"Scheduling spell ({yay})")
-                spell.schedule().transact(gas_price=self.gas_price)
+                spell.schedule().transact(gas_strategy=gas_strategy)
         else:
             self.logger.warning(
                 f"Spell is an EOA or 0x0, so keeper will not attempt to call schedule()"
@@ -321,9 +349,15 @@ class ChiefKeeper:
                 )
 
                 if spell is not None:
+                    gas_strategy = GeometricGasPrice(
+                        web3=self.web3,
+                        initial_price=None,
+                        initial_tip=self.get_initial_tip(self.arguments),
+                        every_secs=180
+                    )
                     if spell.done() == False:
                         self.logger.info(f"Casting spell ({spell.address.address})")
-                        receipt = spell.cast().transact(gas_price=self.gas_price)
+                        receipt = spell.cast().transact(gas_strategy=gas_strategy)
 
                         if receipt is None or receipt.successful == True:
                             del etas[yay]
