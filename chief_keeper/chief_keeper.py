@@ -64,8 +64,7 @@ class ChiefKeeper:
             "--rpc-host",
             type=str,
             required=True,
-            default="https://localhost:8545",
-            help="JSON-RPC host:port (default: 'localhost:8545')",
+            help="JSON-RPC host url",
         )
 
         parser.add_argument(
