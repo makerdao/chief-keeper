@@ -239,6 +239,7 @@ class ChiefKeeper:
             if result.ok and result.content:
                 confidence_80_tip = result.json().get('blockPrices')[0]['estimatedPrices'][3]['maxPriorityFeePerGas']
                 logging.info(f"Using Blocknative 80% confidence tip {confidence_80_tip}")
+                logging.info(int(confidence_80_tip * GeometricGasPrice.GWEI))
                 return int(confidence_80_tip * GeometricGasPrice.GWEI)
         except Exception as e:
             logging.error(str(e))
@@ -280,6 +281,13 @@ class ChiefKeeper:
 
         contender, highestApprovals = hat, hatApprovals
 
+        gas_strategy = GeometricGasPrice(
+            web3=self.web3,
+            initial_price=None,
+            initial_tip=self.get_initial_tip(self.arguments),
+            every_secs=180
+        )
+
         for yay in yays:
             contenderApprovals = self.dss.ds_chief.get_approvals(yay)
             if contenderApprovals > highestApprovals:
@@ -309,12 +317,6 @@ class ChiefKeeper:
 
         # Schedules spells that haven't been scheduled nor casted
         if spell is not None:
-            gas_strategy = GeometricGasPrice(
-                web3=self.web3,
-                initial_price=None,
-                initial_tip=self.get_initial_tip(self.arguments),
-                every_secs=180
-            )
             # Functional with DSSSpells but not DSSpells (not compatiable with DSPause)
             if spell.done() == False and self.database.get_eta_inUnix(spell) == 0:
                 self.logger.info(f"Scheduling spell ({yay})")
