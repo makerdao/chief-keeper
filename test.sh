@@ -15,7 +15,7 @@ popd
 virtualenv --python=`which python3` _virtualenv
 . _virtualenv/bin/activate
 
-PYTHONPATH=$PYTHONPATH:./lib/pymaker:./lib/auction-keeper:./lib/pygasprice-client py.test \
+PYTHONPATH=$PYTHONPATH:./lib/pymaker py.test \
     -s \
     --cov=chief_keeper \
     --cov-report=term \
