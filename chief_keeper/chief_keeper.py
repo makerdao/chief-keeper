@@ -55,6 +55,11 @@ class ChiefKeeper:
 
     logger = logging.getLogger("chief-keeper")
 
+    logging.basicConfig(
+        format="%(asctime)-15s %(levelname)-8s %(message)s",
+        level=(logging.DEBUG if self.arguments.debug else logging.INFO),
+    )
+
     def __init__(self, args: list, **kwargs):
         """Pass in arguements assign necessary variables/objects and instantiate other Classes"""
 
@@ -155,7 +160,7 @@ class ChiefKeeper:
         self.our_address = Address(self.arguments.eth_from)
 
         isConnected = self.web3.isConnected()
-        print(f'web3 isConntected is: {isConnected}')
+        self.logger.info(f'web3 isConntected is: {isConnected}')
 
         if self.arguments.dss_deployment_file:
             self.dss = DssDeployment.from_json(
@@ -166,7 +171,7 @@ class ChiefKeeper:
             self.dss = DssDeployment.from_network(
                 web3=self.web3, network=self.arguments.network
             )
-            print(f"DS-Chief: {self.dss.ds_chief.address}")
+            self.logger.info(f"DS-Chief: {self.dss.ds_chief.address}")
         self.deployment_block = self.arguments.chief_deployment_block
 
         self.max_errors = self.arguments.max_errors
@@ -174,10 +179,6 @@ class ChiefKeeper:
 
         self.confirmations = 0
 
-        logging.basicConfig(
-            format="%(asctime)-15s %(levelname)-8s %(message)s",
-            level=(logging.DEBUG if self.arguments.debug else logging.INFO),
-        )
 
     def main(self):
         """Initialize the lifecycle and enter into the Keeper Lifecycle controller.
@@ -231,8 +232,8 @@ class ChiefKeeper:
             )
             if result.ok and result.content:
                 confidence_80_tip = result.json().get('blockPrices')[0]['estimatedPrices'][3]['maxPriorityFeePerGas']
-                logging.info(f"Using Blocknative 80% confidence tip {confidence_80_tip}")
-                logging.info(int(confidence_80_tip * GeometricGasPrice.GWEI))
+                self.logger.info(f"Using Blocknative 80% confidence tip {confidence_80_tip}")
+                self.logger.info(int(confidence_80_tip * GeometricGasPrice.GWEI))
                 return int(confidence_80_tip * GeometricGasPrice.GWEI)
         except Exception as e:
             logging.error(str(e))
@@ -246,7 +247,7 @@ class ChiefKeeper:
         This is the entrypoint to the Keeper's monitoring logic
         """
         isConnected = self.web3.isConnected()
-        logging.info(f'web3 isConntected is: {isConnected}')
+        self.logger.info(f'web3 isConntected is: {isConnected}')
 
         if self.errors >= self.max_errors:
             self.lifecycle.terminate()

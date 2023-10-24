@@ -1,5 +1,5 @@
 #!/bin/bash
-#cd "$(dirname "$0")"
+
 
 if [[ "$0" = "$BASH_SOURCE" ]]; then
     echo "Needs to be run using source: . install.sh"
