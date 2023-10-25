@@ -55,10 +55,6 @@ class ChiefKeeper:
 
     logger = logging.getLogger("chief-keeper")
 
-    logging.basicConfig(
-        format="%(asctime)-15s %(levelname)-8s %(message)s",
-        level=(logging.DEBUG if self.arguments.debug else logging.INFO),
-    )
 
     def __init__(self, args: list, **kwargs):
         """Pass in arguements assign necessary variables/objects and instantiate other Classes"""
@@ -178,6 +174,11 @@ class ChiefKeeper:
         self.errors = 0
 
         self.confirmations = 0
+
+        logging.basicConfig(
+            format="%(asctime)-15s %(levelname)-8s %(message)s",
+            level=(logging.DEBUG if self.arguments.debug else logging.INFO),
+        )
 
 
     def main(self):
