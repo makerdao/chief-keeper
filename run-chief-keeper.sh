@@ -46,4 +46,5 @@ exec $dir/bin/chief-keeper \
   --network "${BLOCKCHAIN_NETWORK}" \
   --eth-from "${ETH_FROM_ADDRESS}" \
   --eth-key "${ETH_ACCOUNT_KEY}" \
-  --chief-deployment-block "${CHIEF_DEPLOYMENT_BLOCK}"
+  --chief-deployment-block "${CHIEF_DEPLOYMENT_BLOCK}" \
+  --blocknative-api-key "${BLOCKNATIVE_API_KEY}"

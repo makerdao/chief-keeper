@@ -96,7 +96,7 @@ def mcd(web3) -> DssDeployment:
 
 @pytest.fixture(scope="session")
 def keeper(mcd: DssDeployment, keeper_address: Address) -> ChiefKeeper:
-    keeper = ChiefKeeper(args=args(f"--eth-from {keeper_address} --network testnet"), web3=mcd.web3)
+    keeper = ChiefKeeper(args=args(f"--eth-from {keeper_address} --network testnet --rpc-host https://localhost:8545"), web3=mcd.web3)
     assert isinstance(keeper, ChiefKeeper)
     return keeper
 
