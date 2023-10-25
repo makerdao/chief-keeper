@@ -34,8 +34,6 @@ from pymaker.keys import register_keys
 from pymaker.lifecycle import Lifecycle
 from pymaker.deployment import DssDeployment
 
-# from auction_keeper.gas import DynamicGasPrice
-
 HEALTHCHECK_FILE_PATH = "/tmp/health.log"
 
 
@@ -221,8 +219,7 @@ class ChiefKeeper:
 
         self.logger.info(result)
 
-    @staticmethod
-    def get_initial_tip(arguments) -> int:
+    def get_initial_tip(self, arguments) -> int:
         try:
             result = requests.get(
                 url='https://api.blocknative.com/gasprices/blockprices',
