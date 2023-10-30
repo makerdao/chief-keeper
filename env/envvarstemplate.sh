@@ -17,3 +17,5 @@ ETH_ACCOUNT_KEY=key_file=/opt/keeper/chief-keeper/secrets/keystore.json,pass_fil
 
 # Chief Keeper Deployment Block Number
 CHIEF_DEPLOYMENT_BLOCK=
+
+BLOCKNATIVE_API_KEY=
