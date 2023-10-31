@@ -11,6 +11,6 @@ WORKDIR /opt/keeper/chief-keeper
 
 RUN git submodule update --init --recursive && \
     pip3 install virtualenv && \
-    ./install.sh
+    bash /opt/keeper/chief-keeper/install.sh
 
 CMD ["./run-chief-keeper.sh"]
