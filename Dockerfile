@@ -22,5 +22,5 @@ COPY requirements.txt ./
 RUN pip3 install --no-cache-dir -r requirements.txt
 
 # Run run-chief-keeper.sh when the container launches
-CMD ["/bin/bash", "-c", "./run-chief-keeper.sh"]
+CMD ["./run-chief-keeper.sh"]
 

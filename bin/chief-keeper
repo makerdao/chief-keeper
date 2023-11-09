@@ -2,7 +2,12 @@
 
 dir="$(dirname "$0")"/..
 
-. $dir/_virtualenv/bin/activate || exit
+if [ -f "$dir/_virtualenv/bin/activate" ]; then
+    . "$dir/_virtualenv/bin/activate"
+else
+    echo "Virtual environment not needed."
+fi
+
 
 export PYTHONPATH=$PYTHONPATH:$dir:$dir/lib/pymaker
 
