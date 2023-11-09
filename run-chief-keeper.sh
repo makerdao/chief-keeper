@@ -40,11 +40,11 @@ else
   RPC_HOST_TIMEOUT=10
 fi
 
-# exec $dir/bin/chief-keeper \
-#   --rpc-host "${SERVER_ETH_RPC_HOST}" \
-#   --rpc-timeout "${RPC_HOST_TIMEOUT}" \
-#   --network "${BLOCKCHAIN_NETWORK}" \
-#   --eth-from "${ETH_FROM_ADDRESS}" \
-#   --eth-key "${ETH_ACCOUNT_KEY}" \
-#   --chief-deployment-block "${CHIEF_DEPLOYMENT_BLOCK}" \
-#   --blocknative-api-key "${BLOCKNATIVE_API_KEY}"
+exec $dir/bin/chief-keeper \
+  --rpc-host "${SERVER_ETH_RPC_HOST}" \
+  --rpc-timeout "${RPC_HOST_TIMEOUT}" \
+  --network "${BLOCKCHAIN_NETWORK}" \
+  --eth-from "${ETH_FROM_ADDRESS}" \
+  --eth-key "${ETH_ACCOUNT_KEY}" \
+  --chief-deployment-block "${CHIEF_DEPLOYMENT_BLOCK}" \
+  --blocknative-api-key "${BLOCKNATIVE_API_KEY}"
