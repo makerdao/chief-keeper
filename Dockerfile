@@ -14,7 +14,8 @@ WORKDIR /opt/keeper/chief-keeper
 COPY . .
 
 # Install submodules
-RUN git submodule update --init --recursive
+RUN git config --global --add safe.directory /opt/keeper/chief-keeper && \
+    git submodule update --init --recursive
 
 # Install any needed packages specified in requirements.txt
 # First copy only the requirements.txt to leverage Docker cache
