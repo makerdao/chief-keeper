@@ -1,5 +1,5 @@
 # Use an official Python runtime as a parent image
-FROM python:3.8-buster
+FROM python:3.9-buster
 
 # Add user and group for running the application
 RUN groupadd -r keeper && useradd -d /home/keeper -m --no-log-init -r -g keeper keeper && \
