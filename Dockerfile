@@ -1,5 +1,5 @@
 # Use an official Python runtime as a parent image
-FROM python:3.8-buster
+FROM python:3.9-buster
 
 # Add user and group for running the application
 RUN groupadd -r keeper && useradd -d /home/keeper -m --no-log-init -r -g keeper keeper && \
@@ -14,7 +14,8 @@ WORKDIR /opt/keeper/chief-keeper
 COPY . .
 
 # Install submodules
-RUN git submodule update --init --recursive
+RUN git config --global --add safe.directory /opt/keeper/chief-keeper && \
+    git submodule update --init --recursive
 
 # Install any needed packages specified in requirements.txt
 # First copy only the requirements.txt to leverage Docker cache
