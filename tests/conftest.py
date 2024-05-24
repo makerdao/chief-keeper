@@ -46,14 +46,19 @@ def deployment(new_deployment: Deployment) -> Deployment:
 class MockWeb3(Web3):
     def __init__(self, provider: BaseProvider):
         super().__init__(provider)
-        accounts_mock = PropertyMock(return_value=[
+        self._accounts = [
             "0x50FF810797f75f6bfbf2227442e0c961a8562F4C",
             "0x9e1FfFaBdC50e54e030F6E5F7fC27c7Dd22a3F4e",
             "0x5BEB2D3aA2333A524703Af18310AcFf462c04723",
             "0x7fBe5C7C4E7a8B52b8aAA44425Fc1c0d0e72c2AA"
-        ])
-        type(self).eth = PropertyMock(accounts=accounts_mock)
+        ]
 
+    @property
+    def eth(self):
+        eth_mock = MagicMock()
+        accounts_mock = PropertyMock(return_value=self._accounts)
+        type(eth_mock).accounts = accounts_mock
+        return eth_mock
 
 @pytest.fixture(scope="session")
 def web3() -> Web3:
