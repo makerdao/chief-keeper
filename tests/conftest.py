@@ -21,6 +21,7 @@ from os import path
 
 from unittest.mock import patch, MagicMock
 from web3 import Web3, HTTPProvider
+from web3.providers.base import BaseProvider
 
 from pymaker import Address
 from pymaker.auctions import Flipper, Flapper, Flopper
@@ -42,20 +43,24 @@ def deployment(new_deployment: Deployment) -> Deployment:
     new_deployment.reset()
     return new_deployment
 
+class MockWeb3(Web3):
+    def __init__(self, provider: BaseProvider):
+        super().__init__(provider)
+        self.eth.accounts = [
+            "0x50FF810797f75f6bfbf2227442e0c961a8562F4C",
+            "0x9e1FfFaBdC50e54e030F6E5F7fC27c7Dd22a3F4e",
+            "0x5BEB2D3aA2333A524703Af18310AcFf462c04723",
+            "0x7fBe5C7C4E7a8B52b8aAA44425Fc1c0d0e72c2AA"
+        ]
+
+
 @pytest.fixture(scope="session")
 def web3() -> Web3:
-    # for local dockerized parity testchain
-    web3 = Web3(HTTPProvider("http://0.0.0.0:8545"))
+
+    provider = MagicMock(spec=BaseProvider)
+    web3 = MockWeb3(provider)
+
     web3.eth.defaultAccount = "0x50FF810797f75f6bfbf2227442e0c961a8562F4C"
-
-    # Mock accounts and transaction methods
-    web3.eth.accounts = [
-        "0x50FF810797f75f6bfbf2227442e0c961a8562F4C",
-        "0x9e1FfFaBdC50e54e030F6E5F7fC27c7Dd22a3F4e",
-        "0x5BEB2D3aA2333A524703Af18310AcFf462c04723",
-        "0x7fBe5C7C4E7a8B52b8aAA44425Fc1c0d0e72c2AA"
-    ]
-
     web3.eth.sendTransaction = MagicMock()
     web3.eth.getBalance = MagicMock(return_value=1000000000000000000)  # 1 ETH
     web3.eth.blockNumber = 12345678
