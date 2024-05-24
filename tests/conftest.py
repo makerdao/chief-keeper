@@ -19,7 +19,7 @@ import logging
 import pytest
 from os import path
 
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch, MagicMock, PropertyMock
 from web3 import Web3, HTTPProvider
 from web3.providers.base import BaseProvider
 
@@ -46,12 +46,13 @@ def deployment(new_deployment: Deployment) -> Deployment:
 class MockWeb3(Web3):
     def __init__(self, provider: BaseProvider):
         super().__init__(provider)
-        self.eth.accounts = [
+        accounts_mock = PropertyMock(return_value=[
             "0x50FF810797f75f6bfbf2227442e0c961a8562F4C",
             "0x9e1FfFaBdC50e54e030F6E5F7fC27c7Dd22a3F4e",
             "0x5BEB2D3aA2333A524703Af18310AcFf462c04723",
             "0x7fBe5C7C4E7a8B52b8aAA44425Fc1c0d0e72c2AA"
-        ]
+        ])
+        type(self).eth = PropertyMock(accounts=accounts_mock)
 
 
 @pytest.fixture(scope="session")
