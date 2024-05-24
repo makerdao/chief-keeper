@@ -19,6 +19,7 @@ import logging
 import pytest
 from os import path
 
+from unittest.mock import patch, MagicMock
 from web3 import Web3, HTTPProvider
 
 from pymaker import Address
@@ -46,6 +47,19 @@ def web3() -> Web3:
     # for local dockerized parity testchain
     web3 = Web3(HTTPProvider("http://0.0.0.0:8545"))
     web3.eth.defaultAccount = "0x50FF810797f75f6bfbf2227442e0c961a8562F4C"
+
+    # Mock accounts and transaction methods
+    web3.eth.accounts = [
+        "0x50FF810797f75f6bfbf2227442e0c961a8562F4C",
+        "0x9e1FfFaBdC50e54e030F6E5F7fC27c7Dd22a3F4e",
+        "0x5BEB2D3aA2333A524703Af18310AcFf462c04723",
+        "0x7fBe5C7C4E7a8B52b8aAA44425Fc1c0d0e72c2AA"
+    ]
+
+    web3.eth.sendTransaction = MagicMock()
+    web3.eth.getBalance = MagicMock(return_value=1000000000000000000)  # 1 ETH
+    web3.eth.blockNumber = 12345678
+
     register_keys(web3,
                   ["key_file=tests/config/keys/UnlimitedChain/key1.json,pass_file=/dev/null",
                    "key_file=tests/config/keys/UnlimitedChain/key2.json,pass_file=/dev/null",
@@ -98,6 +112,7 @@ def mcd(web3) -> DssDeployment:
 def keeper(mcd: DssDeployment, keeper_address: Address) -> ChiefKeeper:
     keeper = ChiefKeeper(args=args(f"--eth-from {keeper_address} --network testnet --rpc-primary-url https://localhost:8545 --rpc-backup-url https://localhost:8545"), web3=mcd.web3)
     assert isinstance(keeper, ChiefKeeper)
+    keeper.web3 = mcd.web3  # Assign the mocked web3 instance
     return keeper
 
 @pytest.fixture(scope="session")
