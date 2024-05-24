@@ -1,26 +1,8 @@
-# This file is part of Maker Keeper Framework.
-#
-# Copyright (C) 2017-2019 reverendus, EdNoepel
-#
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU Affero General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU Affero General Public License for more details.
-#
-# You should have received a copy of the GNU Affero General Public License
-# along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
 import logging
 import pytest
-from os import path
+from unittest.mock import MagicMock, PropertyMock
 
-from unittest.mock import patch, MagicMock, PropertyMock
-from web3 import Web3, HTTPProvider
+from web3 import Web3
 from web3.providers.base import BaseProvider
 
 from pymaker import Address
@@ -33,7 +15,6 @@ from pymaker.keys import register_keys
 from chief_keeper.chief_keeper import ChiefKeeper
 from chief_keeper.database import SimpleDatabase
 
-
 @pytest.fixture(scope='session')
 def new_deployment() -> Deployment:
     return Deployment()
@@ -43,33 +24,36 @@ def deployment(new_deployment: Deployment) -> Deployment:
     new_deployment.reset()
     return new_deployment
 
-class MockWeb3(Web3):
-    def __init__(self, provider: BaseProvider):
-        super().__init__(provider)
+class MockEth:
+    def __init__(self):
+        self.defaultAccount = "0x50FF810797f75f6bfbf2227442e0c961a8562F4C"
+        self.sendTransaction = MagicMock()
+        self.getBalance = MagicMock(return_value=1000000000000000000)  # 1 ETH
+        self.blockNumber = 12345678
         self._accounts = [
             "0x50FF810797f75f6bfbf2227442e0c961a8562F4C",
             "0x9e1FfFaBdC50e54e030F6E5F7fC27c7Dd22a3F4e",
             "0x5BEB2D3aA2333A524703Af18310AcFf462c04723",
             "0x7fBe5C7C4E7a8B52b8aAA44425Fc1c0d0e72c2AA"
         ]
+    
+    @property
+    def accounts(self):
+        return self._accounts
 
+class MockWeb3(Web3):
+    def __init__(self, provider: BaseProvider):
+        super().__init__(provider)
+        self._eth = MockEth()
+    
     @property
     def eth(self):
-        eth_mock = MagicMock()
-        accounts_mock = PropertyMock(return_value=self._accounts)
-        type(eth_mock).accounts = accounts_mock
-        return eth_mock
+        return self._eth
 
 @pytest.fixture(scope="session")
 def web3() -> Web3:
-
     provider = MagicMock(spec=BaseProvider)
     web3 = MockWeb3(provider)
-
-    web3.eth.defaultAccount = "0x50FF810797f75f6bfbf2227442e0c961a8562F4C"
-    web3.eth.sendTransaction = MagicMock()
-    web3.eth.getBalance = MagicMock(return_value=1000000000000000000)  # 1 ETH
-    web3.eth.blockNumber = 12345678
 
     register_keys(web3,
                   ["key_file=tests/config/keys/UnlimitedChain/key1.json,pass_file=/dev/null",
@@ -78,7 +62,7 @@ def web3() -> Web3:
                    "key_file=tests/config/keys/UnlimitedChain/key4.json,pass_file=/dev/null",
                    "key_file=tests/config/keys/UnlimitedChain/key.json,pass_file=/dev/null"])
 
-    # reduce logspew
+    # Reduce logspew
     logging.getLogger("web3").setLevel(logging.INFO)
     logging.getLogger("urllib3").setLevel(logging.INFO)
     logging.getLogger("asyncio").setLevel(logging.INFO)
@@ -113,15 +97,13 @@ def deployment_address(web3) -> Address:
 
 @pytest.fixture(scope="session")
 def mcd(web3) -> DssDeployment:
-
     deployment = DssDeployment.from_network(web3=web3, network="testnet")
     validate_contracts_loaded(deployment)
-
     return deployment
 
 @pytest.fixture(scope="session")
 def keeper(mcd: DssDeployment, keeper_address: Address) -> ChiefKeeper:
-    keeper = ChiefKeeper(args=args(f"--eth-from {keeper_address} --network testnet --rpc-primary-url https://localhost:8545 --rpc-backup-url https://localhost:8545"), web3=mcd.web3)
+    keeper = ChiefKeeper(args=args(f"--eth-from {keeper_address} --network testnet --rpc-primary-url http://localhost:8545 --rpc-backup-url http://localhost:8545"))
     assert isinstance(keeper, ChiefKeeper)
     keeper.web3 = mcd.web3  # Assign the mocked web3 instance
     return keeper
