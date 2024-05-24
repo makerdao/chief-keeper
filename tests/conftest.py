@@ -42,9 +42,12 @@ class MockEth:
         return self._accounts
 
 class MockWeb3(Web3):
-    def __init__(self, provider: BaseProvider):
+    def __init__(self, provider):
         super().__init__(provider)
-        self._eth = MockEth()
+        self.eth = MagicMock()
+        self.geth = MagicMock()
+        self.parity = MagicMock()
+        self.net = MagicMock()
     
     @property
     def eth(self):
