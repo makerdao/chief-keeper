@@ -21,6 +21,7 @@ from typing import List
 
 from tinydb import TinyDB, Query
 from web3 import Web3
+from web3.exceptions import TimeExhausted
 
 from chief_keeper.spell import DSSSpell
 

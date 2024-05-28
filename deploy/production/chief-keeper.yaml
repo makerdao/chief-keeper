@@ -39,13 +39,14 @@ resources:
 autoscaling:
   enabled: false
 env:
-  SERVER_ETH_RPC_HOST:
+  PRIMARY_ETH_RPC_HOST:
     type: parameterStore
-    name: server-eth-rpc-host
-    parameter_name: /eks/maker-prod/chief-keeper/server-eth-rpc-host
-  RPC_HOST_TIMEOUT:
-    type: kv
-    value: "120"
+    name: primary-eth-rpc-host
+    parameter_name: /eks/maker-prod/chief-keeper/primary-eth-rpc-host
+  BACKUP_ETH_RPC_HOST:
+    type: parameterStore
+    name: backup-eth-rpc-host
+    parameter_name: /eks/maker-prod/chief-keeper/backup-eth-rpc-host
   ETH_ACCOUNT_KEY:
     type: kv
     value: "key_file=/opt/keeper/chief-keeper/secrets/keystore.json,pass_file=/opt/keeper/chief-keeper/secrets/password.txt"
