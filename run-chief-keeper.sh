@@ -37,7 +37,7 @@ fi
 
 exec $dir/bin/chief-keeper \
   --rpc-primary-url "${PRIMARY_ETH_RPC_HOST}" \
-  --rpc-backup-url "${BACKUP_RPC_HOST}" \
+  --rpc-backup-url "${BACKUP_ETH_RPC_HOST}" \
   --network "${BLOCKCHAIN_NETWORK}" \
   --eth-from "${ETH_FROM_ADDRESS}" \
   --eth-key "${ETH_ACCOUNT_KEY}" \
