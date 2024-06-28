@@ -1,10 +1,10 @@
 # Use an official Python runtime as a parent image
-FROM python:3.9-buster
+FROM python:3.11-bullseye
 
 # Add user and group for running the application
 RUN groupadd -r keeper && useradd -d /home/keeper -m --no-log-init -r -g keeper keeper && \
     apt-get update -y && \
-    apt-get install -y jshon jq pkg-config openssl libssl-dev autoconf libtool libsecp256k1-dev && \
+    apt-get install -y git jq pkg-config openssl libssl-dev autoconf libtool && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Set the working directory in the container to /opt/keeper/chief-keeper
@@ -14,8 +14,7 @@ WORKDIR /opt/keeper/chief-keeper
 COPY . .
 
 # Install submodules
-RUN git config --global --add safe.directory /opt/keeper/chief-keeper && \
-    git submodule update --init --recursive
+RUN git config --global --add safe.directory /opt/keeper/chief-keeper
 
 # Install any needed packages specified in requirements.txt
 # First copy only the requirements.txt to leverage Docker cache
