@@ -33,6 +33,7 @@ from chief_keeper.spell import DSSSpell
 
 from .utils.keeper_lifecycle import Lifecycle
 from. utils.register_keys import register_keys
+from .utils.blockchain_utils import initialize_blockchain_connection
 
 # from pymaker import Address, web3_via_http
 # from pymaker.util import is_contract_at
@@ -109,12 +110,7 @@ class ChiefKeeper:
 
         self.web3 = None
         self.node_type = None
-        self._initialize_blockchain_connection()
-
-        # Set the Ethereum address and register keys
-        # self.web3.eth.defaultAccount = self.arguments.eth_from
-        # register_keys(self.web3, self.arguments.eth_key)
-        # self.our_address = Address(self.arguments.eth_from)
+        initialize_blockchain_connection(self)
 
         # if self.arguments.dss_deployment_file:
         #     self.dss = DssDeployment.from_json(
@@ -137,54 +133,6 @@ class ChiefKeeper:
         """Print all the arguments passed to the script."""
         for arg in vars(self.arguments):
             self.logger.info(f"{arg}: {getattr(self.arguments, arg)}")
-
-    def _initialize_blockchain_connection(self):
-        """Initialize connection with Ethereum node."""
-        if not self._connect_to_primary_node():
-            self.logger.info("Switching to backup node.")
-            if not self._connect_to_backup_node():
-                self.logger.critical(
-                    "Error: Couldn't connect to the primary and backup Ethereum nodes."
-                )
-
-    def _connect_to_primary_node(self):
-        """Connect to the primary Ethereum node"""
-        return self._connect_to_node(
-            self.arguments.rpc_primary_url, self.arguments.rpc_primary_timeout, "primary"
-        )
-
-    def _connect_to_backup_node(self):
-        """Connect to the backup Ethereum node"""
-        return self._connect_to_node(
-            self.arguments.rpc_backup_url, self.arguments.rpc_backup_timeout, "backup"
-        )
-
-    def _connect_to_node(self, rpc_url, rpc_timeout, node_type):
-        """Connect to an Ethereum node"""
-        try:
-            _web3 = Web3(HTTPProvider(rpc_url, {"timeout": rpc_timeout}))
-        except (TimeExhausted, Exception) as e:
-            self.logger.error(f"Error connecting to Ethereum node: {e}")
-            return False
-        else:
-            if _web3.is_connected():
-                self.web3 = _web3
-                self.node_type = node_type
-                return self._configure_web3()
-        return False
-
-    def _configure_web3(self):
-        """Configure Web3 connection with private key"""
-        try:
-            self.web3.eth.defaultAccount = self.arguments.eth_from
-            register_keys(self.web3, self.arguments.eth_key)
-        except Exception as e:
-            self.logger.error(f"Error configuring Web3: {e}")
-            return False
-        else:
-            node_hostname = urlparse(self.web3.provider.endpoint_uri).hostname
-            self.logger.info(f"Connected to Ethereum node at {node_hostname}")
-            return True
 
     def main(self):
         """Initialize the lifecycle and enter into the Keeper Lifecycle controller.
