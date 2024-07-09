@@ -1,6 +1,6 @@
 
 # This file is part of the Maker Keeper Framework.
-
+#
 # It contains utility functions to handle the initialization and connection
 # to an Ethereum blockchain node. The functions include methods for connecting
 # to primary and backup nodes, and configuring the Web3 connection.

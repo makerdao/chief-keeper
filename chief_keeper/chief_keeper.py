@@ -33,7 +33,7 @@ from chief_keeper.spell import DSSSpell
 
 from .utils.keeper_lifecycle import Lifecycle
 from. utils.register_keys import register_keys
-from .utils.blockchain_utils import initialize_blockchain_connection
+from .utils.blockchain import initialize_blockchain_connection
 
 # from pymaker import Address, web3_via_http
 # from pymaker.util import is_contract_at
