@@ -19,7 +19,9 @@ from datetime import datetime
 
 from web3 import Web3
 
-from pymaker import Address, Contract, Transact
+from chief_keeper.utils.address import Address
+from chief_keeper.utils.contract import Contract
+from chief_keeper.utils.transact import Transact
 
 
 class DSSSpell(Contract):

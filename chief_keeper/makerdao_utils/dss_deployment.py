@@ -26,16 +26,18 @@ from web3 import Web3
 from chief_keeper.utils.address import Address
 
 from chief_keeper.makerdao_utils.auctions import Clipper, Flapper, Flipper, Flopper
+from chief_keeper.makerdao_utils.dss import Cat, Dog, Jug, Pot, Spotter, TokenFaucet, Vat, Vow
+from chief_keeper.makerdao_utils.collateral import Collateral
+from chief_keeper.makerdao_utils.join import DaiJoin, GemJoin, GemJoin5
+from chief_keeper.makerdao_utils.proxy import ProxyRegistry, DssProxyActionsDsr
 
-from pymaker.collateral import Collateral
-from pymaker.dss import Cat, Dog, Jug, Pot, Spotter, TokenFaucet, Vat, Vow
-from pymaker.join import DaiJoin, GemJoin, GemJoin5
-from pymaker.proxy import ProxyRegistry, DssProxyActionsDsr
-from pymaker.feed import DSValue
-from pymaker.governance import DSPause, DSChief
+from chief_keeper.makerdao_utils.feed import DSValue
+from chief_keeper.makerdao_utils.governance import DSPause, DSChief
+from chief_keeper.makerdao_utils.token import DSToken, DSEthToken
+
 from pymaker.oracles import OSM
 from pymaker.shutdown import ShutdownModule, End
-from pymaker.token import DSToken, DSEthToken
+
 from pymaker.cdpmanager import CdpManager
 from pymaker.dsrmanager import DsrManager
 

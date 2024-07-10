@@ -17,14 +17,12 @@
 
 import json
 import logging
-
 import eth_utils
 import pkg_resources
 
 from web3 import Web3
 
 from chief_keeper.utils.address import Address
-
 from chief_keeper.utils.utils import bytes_to_hexstring, is_contract_at
 
 class Contract:

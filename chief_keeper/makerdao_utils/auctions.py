@@ -29,12 +29,13 @@ from eth_abi.registry import registry as default_registry
 from chief_keeper.utils.address import Address
 from chief_keeper.utils.contract import Contract
 from chief_keeper.utils.transact import Transact
+from chief_keeper.utils.big_number import Wad, Rad, Ray
 
+from chief_keeper.makerdao_utils.dss import Dog, Vat
+from chief_keeper.makerdao_utils.token import ERC20Token
 
-from pymaker.dss import Dog, Vat
 from pymaker.logging import LogNote
-from pymaker.numeric import Wad, Rad, Ray
-from pymaker.token import ERC20Token
+
 
 
 def toBytes(string: str):

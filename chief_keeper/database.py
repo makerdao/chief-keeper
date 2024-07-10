@@ -25,8 +25,9 @@ from web3.exceptions import TimeExhausted
 
 from chief_keeper.spell import DSSSpell
 
-from pymaker import Address
-from pymaker.util import is_contract_at
+from chief_keeper.utils.address import Address
+from chief_keeper.utils.address import Address
+from chief_keeper.utils.utils import is_contract_at
 from pymaker.deployment import DssDeployment
 
 

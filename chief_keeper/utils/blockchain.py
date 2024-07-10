@@ -27,7 +27,7 @@ import logging
 from urllib.parse import urlparse
 from web3 import Web3, HTTPProvider
 from web3.exceptions import TimeExhausted
-from .register_keys import register_keys
+from chief_keeper.utils.register_keys import register_keys
 
 logger = logging.getLogger()
 
