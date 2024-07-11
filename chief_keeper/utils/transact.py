@@ -20,13 +20,109 @@ import asyncio
 import logging
 import sys
 import time
-from typing import Optional
 
+from typing import Optional
+from weakref import WeakKeyDictionary
+from threading import Lock
+from enum import Enum, auto
 from web3 import Web3
 from web3.exceptions import TransactionNotFound
+from functools import wraps
 
-from pymaker.gas import DefaultGasPrice, GasStrategy
+
+import chief_keeper.utils.address as address_utils
+
+from chief_keeper.utils.gas import DefaultGasPrice, GasStrategy
 from chief_keeper.utils.utils import synchronize, bytes_to_hexstring
+from chief_keeper.utils.receipt import Receipt
+from chief_keeper.utils.calldata import Calldata
+
+filter_threads = []
+endpoint_behavior = WeakKeyDictionary()
+next_nonce = {}
+transaction_lock = Lock()
+logger = logging.getLogger()
+
+
+class NonceCalculation(Enum):
+    TX_COUNT = auto()
+    PARITY_NEXTNONCE = auto()
+    SERIAL = auto()
+    PARITY_SERIAL = auto()
+
+class Invocation(object):
+    """Single contract method invocation, to be used together with `TxManager`.
+
+    Attributes:
+        address: Contract address.
+        calldata: The calldata of the invocation.
+    """
+    def __init__(self, address: address_utils.Address, calldata: Calldata):
+        assert(isinstance(address, address_utils.Address))
+        assert(isinstance(calldata, Calldata))
+        self.address = address
+        self.calldata = calldata
+
+class EndpointBehavior:
+    def __init__(self, nonce_calc: NonceCalculation, supports_eip1559: bool):
+        assert isinstance(nonce_calc, NonceCalculation)
+        assert isinstance(supports_eip1559, bool)
+        self.nonce_calc = nonce_calc
+        self.supports_eip1559 = supports_eip1559
+
+    def __repr__(self):
+        if self.supports_eip1559:
+            return f"{self.nonce_calc} with EIP 1559 support"
+        else:
+            return f"{self.nonce_calc} without EIP 1559 support"
+
+class TransactStatus(Enum):
+     NEW = auto()
+     IN_PROGRESS = auto()
+     FINISHED = auto()
+
+def _get_endpoint_behavior(web3: Web3) -> EndpointBehavior:
+    assert isinstance(web3, Web3)
+    global endpoint_behavior
+    if web3 not in endpoint_behavior:
+
+        # Determine nonce calculation
+        providers_without_nonce_calculation = ['alchemy', 'infura', 'quiknode']
+        requires_serial_nonce = any(provider in web3.manager.provider.endpoint_uri for provider in
+                                    providers_without_nonce_calculation)
+        is_parity = "parity" in web3.clientVersion.lower() or "openethereum" in web3.clientVersion.lower()
+        if requires_serial_nonce:
+            nonce_calc = NonceCalculation.SERIAL
+        elif is_parity:
+            nonce_calc = NonceCalculation.PARITY_NEXTNONCE
+        else:
+            nonce_calc = NonceCalculation.TX_COUNT
+
+        # Check for EIP 1559 gas parameters support
+        supports_london = 'baseFeePerGas' in web3.eth.get_block('latest')
+
+        behavior = EndpointBehavior(nonce_calc, supports_london)
+        endpoint_behavior[web3] = behavior
+        logger.debug(f"node clientVersion={web3.clientVersion}, will use {behavior}")
+    return endpoint_behavior[web3]
+
+
+def _track_status(f):
+    @wraps(f)
+    async def wrapper(*args, **kwds):
+        # Check for multiple execution
+        if args[0].status != TransactStatus.NEW:
+            raise Exception("Each `Transact` can only be executed once")
+
+        # Set current status to in progress
+        args[0].status = TransactStatus.IN_PROGRESS
+
+        try:
+            return await f(*args, **kwds)
+        finally:
+            args[0].status = TransactStatus.FINISHED
+
+    return wrapper
 
 
 class Transact:
@@ -39,7 +135,7 @@ class Transact:
                  origin: Optional[object],
                  web3: Web3,
                  abi: Optional[list],
-                 address: Address,
+                 address: address_utils.Address,
                  contract: Optional[object],
                  function_name: Optional[str],
                  parameters: Optional[list],
@@ -48,7 +144,7 @@ class Transact:
         assert(isinstance(origin, object) or (origin is None))
         assert(isinstance(web3, Web3))
         assert(isinstance(abi, list) or (abi is None))
-        assert(isinstance(address, Address))
+        assert(isinstance(address, address_utils.Address))
         assert(isinstance(contract, object) or (contract is None))
         assert(isinstance(function_name, str) or (function_name is None))
         assert(isinstance(parameters, list) or (parameters is None))
@@ -243,18 +339,18 @@ class Transact:
 
         return name if self.extra is None else name + f" with {self.extra}"
 
-    def estimated_gas(self, from_address: Address) -> int:
+    def estimated_gas(self, from_address: address_utils.Address) -> int:
         """Return an estimated amount of gas which will get consumed by this Ethereum transaction.
 
         May throw an exception if the actual transaction will fail as well.
 
         Args:
-            from_address: Address to simulate sending the transaction from.
+            from_address: address_utils.Address to simulate sending the transaction from.
 
         Returns:
             Amount of gas as an integer.
         """
-        assert(isinstance(from_address, Address))
+        assert(isinstance(from_address, address_utils.Address))
 
         if self.contract is not None:
             if self.function_name is None:
@@ -283,7 +379,7 @@ class Transact:
 
         Allowed keyword arguments are: `from_address`, `replace`, `gas`, `gas_buffer`, `gas_price`.
         `gas_price` needs to be an instance of a class inheriting from :py:class:`pymaker.gas.GasPrice`.
-        `from_address` needs to be an instance of :py:class:`pymaker.Address`.
+        `from_address` needs to be an instance of :py:class:`pymaker.address_utils.Address`.
 
         The `gas` keyword argument is the gas limit for the transaction, whereas `gas_buffer`
         specifies how much gas should be added to the estimate. They can not be present
@@ -331,7 +427,7 @@ class Transact:
         # gas value (plus some `gas_buffer`) to the subsequent `transact` calls so it does not
         # try to estimate it again.
         try:
-            gas_estimate = self.estimated_gas(Address(from_account))
+            gas_estimate = self.estimated_gas(address_utils.Address(from_account))
         except:
             if Transact.gas_estimate_for_bad_txs:
                 self.logger.warning(f"Transaction {self.name()} will fail, submitting anyway")

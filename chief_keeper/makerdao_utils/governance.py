@@ -23,7 +23,9 @@ from pprint import pformat
 from chief_keeper.utils.address import Address
 from chief_keeper.utils.contract import Contract
 from chief_keeper.utils.transact import Transact
-from pymaker.auth import DSAuth
+from chief_keeper.utils.big_number import Wad
+
+from chief_keeper.makerdao_utils.auth import DSAuth
 from chief_keeper.makerdao_utils.token import DSToken
 
 

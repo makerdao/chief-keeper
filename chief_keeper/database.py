@@ -23,12 +23,11 @@ from tinydb import TinyDB, Query
 from web3 import Web3
 from web3.exceptions import TimeExhausted
 
-from chief_keeper.spell import DSSSpell
+from chief_keeper.makerdao_utils.spell import DSSSpell
 
 from chief_keeper.utils.address import Address
-from chief_keeper.utils.address import Address
 from chief_keeper.utils.utils import is_contract_at
-from pymaker.deployment import DssDeployment
+from chief_keeper.makerdao_utils.dss_deployment import DssDeployment
 
 
 class SimpleDatabase:

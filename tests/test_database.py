@@ -24,7 +24,7 @@ import logging
 
 from web3 import Web3
 
-from chief_keeper.spell import DSSSpell
+from chief_keeper.makerdao_utils.spell import DSSSpell
 from chief_keeper.database import SimpleDatabase
 
 from pymaker import Address, Contract, Transact

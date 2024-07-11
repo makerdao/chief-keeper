@@ -23,11 +23,11 @@ from chief_keeper.utils.contract import Contract
 from chief_keeper.makerdao_utils.auctions import AuctionContract, Clipper, Flipper
 from chief_keeper.makerdao_utils.join import GemJoin
 from chief_keeper.makerdao_utils.token import ERC20Token
+from chief_keeper.makerdao_utils.ikl import Ilk
 
-from pymaker.approval import directly, hope_directly
+from chief_keeper.makerdao_utils.approval import directly, hope_directly
 
-from pymaker.ilk import Ilk
-from pymaker.gas import DefaultGasPrice
+from chief_keeper.utils.gas import DefaultGasPrice
 
 
 

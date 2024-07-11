@@ -25,7 +25,7 @@ from web3 import Web3
 
 from chief_keeper.database import SimpleDatabase
 from chief_keeper.chief_keeper import ChiefKeeper
-from chief_keeper.spell import DSSSpell
+from chief_keeper.makerdao_utils.spell import DSSSpell
 
 from pymaker import Address
 from pymaker.deployment import DssDeployment

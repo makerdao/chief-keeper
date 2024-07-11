@@ -28,9 +28,8 @@ from chief_keeper.utils.transact import Transact
 from chief_keeper.utils.big_number import Wad, Rad, Ray
 
 from chief_keeper.makerdao_utils.token import ERC20Token
-
-from pymaker.ilk import Ilk
-from pymaker.logging import LogNote
+from chief_keeper.makerdao_utils.ikl import Ilk
+from chief_keeper.makerdao_utils.logging import LogNote
 
 
 

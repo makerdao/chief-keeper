@@ -29,10 +29,9 @@ from web3.exceptions import TimeExhausted
 from urllib.parse import urlparse
 
 from chief_keeper.database import SimpleDatabase
-from chief_keeper.spell import DSSSpell
+from chief_keeper.makerdao_utils.spell import DSSSpell
 
 from chief_keeper.utils.keeper_lifecycle import Lifecycle
-
 from chief_keeper.utils.blockchain import initialize_blockchain_connection
 
 # from pymaker import Address, web3_via_http

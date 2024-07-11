@@ -19,13 +19,15 @@ import json
 
 from web3 import Web3
 
-from chief_keeper.utils.address import Address
-from chief_keeper.utils.contract import Contract
-from chief_keeper.utils.transact import Transact
-from chief_keeper.utils.big_number import Wad
+import chief_keeper.utils.address as address_utils
+import chief_keeper.utils.contract as contract_utils
+import chief_keeper.utils.transact as transact_utils
+import chief_keeper.utils.big_number as big_number_utils
 
+# Lazy import of transact_utils to avoid circular import issues
+transact_utils = None
 
-class ERC20Token(Contract):
+class ERC20Token(contract_utils.Contract):
     """A client for a standard ERC20 token contract.
 
     Attributes:
@@ -33,16 +35,23 @@ class ERC20Token(Contract):
         address: Ethereum address of the ERC20 token.
     """
 
-    abi = Contract._load_abi(__name__, 'abi/ERC20Token.abi')
+    abi = contract_utils.Contract._load_abi(__name__, 'abi/ERC20Token.abi')
     registry = {}
 
-    def __init__(self, web3: Web3, address: Address):
+    def __init__(self, web3: Web3, address: address_utils.Address):
         assert(isinstance(web3, Web3))
-        assert(isinstance(address, Address))
+        assert(isinstance(address, address_utils.Address))
 
         self.web3 = web3
         self.address = address
         self._contract = self._get_contract(web3, self.abi, address)
+
+        # # Lazy import for transact_utils
+        # global transact_utils
+        # if 'transact_utils' not in globals():
+        #     import chief_keeper.utils.transact as transact_utils
+        #     globals()['transact_utils'] = transact_utils
+
 
     def name(self) -> str:
         abi_with_string = json.loads("""[{"constant":true,"inputs":[],"name":"name","outputs":[{"name":"","type":"string"}],"payable":false,"stateMutability":"view","type":"function"}]""")
@@ -68,15 +77,15 @@ class ERC20Token(Contract):
         except:
             return str(contract_with_bytes32.functions.symbol().call(), "utf-8").strip('\x00')
 
-    def total_supply(self) -> Wad:
+    def total_supply(self) -> big_number_utils.Wad:
         """Returns the total supply of the token.
 
         Returns:
             The total supply of the token.
         """
-        return Wad(self._contract.functions.totalSupply().call())
+        return big_number_utils.Wad(self._contract.functions.totalSupply().call())
 
-    def balance_of(self, address: Address) -> Wad:
+    def balance_of(self, address: address_utils.Address) -> big_number_utils.Wad:
         """Returns the token balance of a given address.
 
         Args:
@@ -85,11 +94,11 @@ class ERC20Token(Contract):
         Returns:
             The token balance of the address specified.
         """
-        assert(isinstance(address, Address))
+        assert(isinstance(address, address_utils.Address))
 
-        return Wad(self._contract.functions.balanceOf(address.address).call())
+        return big_number_utils.Wad(self._contract.functions.balanceOf(address.address).call())
 
-    def balance_at_block(self, address: Address, block_identifier: int = 'latest') -> Wad:
+    def balance_at_block(self, address: address_utils.Address, block_identifier: int = 'latest') -> big_number_utils.Wad:
         """Returns the token balance of a given address.
 
         Args:
@@ -99,12 +108,12 @@ class ERC20Token(Contract):
         Returns:
             The token balance of the address specified.
         """
-        assert(isinstance(address, Address))
+        assert(isinstance(address, address_utils.Address))
         assert(isinstance(block_identifier, int) or block_identifier == 'latest')
 
-        return Wad(self._contract.functions.balanceOf(address.address).call(block_identifier=block_identifier))
+        return big_number_utils.Wad(self._contract.functions.balanceOf(address.address).call(block_identifier=block_identifier))
 
-    def allowance_of(self, address: Address, payee: Address) -> Wad:
+    def allowance_of(self, address: address_utils.Address, payee: address_utils.Address) -> big_number_utils.Wad:
         """Returns the current allowance of a specified `payee` (delegate account).
 
         Allowance is an ERC20 concept allowing the `payee` (delegate account) to spend a fixed amount of tokens
@@ -117,12 +126,12 @@ class ERC20Token(Contract):
         Returns:
             The allowance of the `payee` specified in regards to the `address`.
         """
-        assert(isinstance(address, Address))
-        assert(isinstance(payee, Address))
+        assert(isinstance(address, address_utils.Address))
+        assert(isinstance(payee, address_utils.Address))
 
-        return Wad(self._contract.functions.allowance(address.address, payee.address).call())
+        return big_number_utils.Wad(self._contract.functions.allowance(address.address, payee.address).call())
 
-    def transfer(self, address: Address, value: Wad) -> Transact:
+    def transfer(self, address: address_utils.Address, value: big_number_utils.Wad) -> 'transact_utils.Transact':
         """Transfers tokens to a specified address.
 
         Args:
@@ -130,14 +139,14 @@ class ERC20Token(Contract):
             value: The value of tokens to transfer.
 
         Returns:
-            A :py:class:`pymaker.Transact` instance, which can be used to trigger the transaction.
+            A :py:class:`transact_utils.Transact` instance, which can be used to trigger the transaction.
         """
-        assert(isinstance(address, Address))
-        assert(isinstance(value, Wad))
+        assert(isinstance(address, address_utils.Address))
+        assert(isinstance(value, big_number_utils.Wad))
 
-        return Transact(self, self.web3, self.abi, self.address, self._contract, 'transfer', [address.address, value.value])
+        return transact_utils.Transact(self, self.web3, self.abi, self.address, self._contract, 'transfer', [address.address, value.value])
 
-    def transfer_from(self, source_address: Address, destination_address: Address, value: Wad) -> Transact:
+    def transfer_from(self, source_address: address_utils.Address, destination_address: address_utils.Address, value: big_number_utils.Wad) -> 'transact_utils.Transact':
         """Transfers tokens to a specified address.
 
         Args:
@@ -146,17 +155,17 @@ class ERC20Token(Contract):
             value: The value of tokens to transfer.
 
         Returns:
-            A :py:class:`pymaker.Transact` instance, which can be used to trigger the transaction.
+            A :py:class:`transact_utils.Transact` instance, which can be used to trigger the transaction.
         """
-        assert(isinstance(source_address, Address))
-        assert(isinstance(destination_address, Address))
-        assert(isinstance(value, Wad))
+        assert(isinstance(source_address, address_utils.Address))
+        assert(isinstance(destination_address, address_utils.Address))
+        assert(isinstance(value, big_number_utils.Wad))
 
-        return Transact(self, self.web3, self.abi, self.address, self._contract, 'transferFrom', [source_address.address,
+        return transact_utils.Transact(self, self.web3, self.abi, self.address, self._contract, 'transferFrom', [source_address.address,
                                                                                                   destination_address.address,
                                                                                                   value.value])
 
-    def approve(self, payee: Address, limit: Wad = Wad(2**256 - 1)) -> Transact:
+    def approve(self, payee: address_utils.Address, limit: big_number_utils.Wad = big_number_utils.Wad(2**256 - 1)) -> 'transact_utils.Transact':
         """Modifies the current allowance of a specified `payee` (delegate account).
 
         Allowance is an ERC20 concept allowing the `payee` (delegate account) to spend a fixed amount of tokens
@@ -170,12 +179,12 @@ class ERC20Token(Contract):
                 can spend on behalf of their owner.
 
         Returns:
-            A :py:class:`pymaker.Transact` instance, which can be used to trigger the transaction.
+            A :py:class:`transact_utils.Transact` instance, which can be used to trigger the transaction.
         """
-        assert(isinstance(payee, Address))
-        assert(isinstance(limit, Wad))
+        assert(isinstance(payee, address_utils.Address))
+        assert(isinstance(limit, big_number_utils.Wad))
 
-        return Transact(self, self.web3, self.abi, self.address, self._contract,
+        return transact_utils.Transact(self, self.web3, self.abi, self.address, self._contract,
                         'approve(address,uint256)', [payee.address, limit.value])
 
     def __eq__(self, other):
@@ -196,8 +205,8 @@ class DSToken(ERC20Token):
         address: Ethereum address of the `DSToken` contract.
     """
 
-    abi = Contract._load_abi(__name__, 'abi/DSToken.abi')
-    bin = Contract._load_bin(__name__, 'abi/DSToken.bin')
+    abi = contract_utils.Contract._load_abi(__name__, 'abi/DSToken.abi')
+    bin = contract_utils.Contract._load_bin(__name__, 'abi/DSToken.bin')
 
     @staticmethod
     def deploy(web3: Web3, symbol: str):
@@ -211,41 +220,41 @@ class DSToken(ERC20Token):
             A `DSToken` class instance.
         """
         assert(isinstance(symbol, str))
-        return DSToken(web3=web3, address=Contract._deploy(web3, DSToken.abi, DSToken.bin, [bytes(symbol, "utf-8")]))
+        return DSToken(web3=web3, address=contract_utils.Contract._deploy(web3, DSToken.abi, DSToken.bin, [bytes(symbol, "utf-8")]))
 
-    def authority(self) -> Address:
+    def authority(self) -> address_utils.Address:
         """Return the current `authority` of a `DSAuth`-ed contract.
 
         Returns:
             The address of the current `authority`.
         """
-        return Address(self._contract.functions.authority().call())
+        return address_utils.Address(self._contract.functions.authority().call())
 
-    def set_authority(self, address: Address) -> Transact:
+    def set_authority(self, address: address_utils.Address) -> 'transact_utils.Transact':
         """Set the `authority` of a `DSAuth`-ed contract.
 
         Args:
             address: The address of the new `authority`.
 
         Returns:
-            A :py:class:`pymaker.Transact` instance, which can be used to trigger the transaction.
+            A :py:class:`transact_utils.Transact` instance, which can be used to trigger the transaction.
         """
-        assert(isinstance(address, Address))
-        return Transact(self, self.web3, self.abi, self.address, self._contract, 'setAuthority', [address.address])
+        assert(isinstance(address, address_utils.Address))
+        return transact_utils.Transact(self, self.web3, self.abi, self.address, self._contract, 'setAuthority', [address.address])
 
-    def mint(self, amount: Wad) -> Transact:
+    def mint(self, amount: big_number_utils.Wad) -> 'transact_utils.Transact':
         """Increase the total supply of the token.
 
         Args:
             amount: The amount to increase the total supply by.
 
         Returns:
-            A :py:class:`pymaker.Transact` instance, which can be used to trigger the transaction.
+            A :py:class:`transact_utils.Transact` instance, which can be used to trigger the transaction.
         """
-        assert(isinstance(amount, Wad))
-        return Transact(self, self.web3, self.abi, self.address, self._contract, 'mint(uint256)', [amount.value])
+        assert(isinstance(amount, big_number_utils.Wad))
+        return transact_utils.Transact(self, self.web3, self.abi, self.address, self._contract, 'mint(uint256)', [amount.value])
 
-    def mint_to(self, address: Address, amount: Wad) -> Transact:
+    def mint_to(self, address: address_utils.Address, amount: big_number_utils.Wad) -> 'transact_utils.Transact':
         """Increase the total supply of the token.
 
         Args:
@@ -253,26 +262,26 @@ class DSToken(ERC20Token):
             amount: The amount to increase the total supply by.
 
         Returns:
-            A :py:class:`pymaker.Transact` instance, which can be used to trigger the transaction.
+            A :py:class:`transact_utils.Transact` instance, which can be used to trigger the transaction.
         """
-        assert(isinstance(amount, Wad))
-        assert(isinstance(address, Address))
-        return Transact(self, self.web3, self.abi, self.address, self._contract, 'mint(address,uint256)', [address.address,
+        assert(isinstance(amount, big_number_utils.Wad))
+        assert(isinstance(address, address_utils.Address))
+        return transact_utils.Transact(self, self.web3, self.abi, self.address, self._contract, 'mint(address,uint256)', [address.address,
                                                                                                            amount.value])
 
-    def burn(self, amount: Wad) -> Transact:
+    def burn(self, amount: big_number_utils.Wad) -> 'transact_utils.Transact':
         """Decrease the total supply of the token.
 
         Args:
             amount: The amount to decrease the total supply by.
 
         Returns:
-            A :py:class:`pymaker.Transact` instance, which can be used to trigger the transaction.
+            A :py:class:`transact_utils.Transact` instance, which can be used to trigger the transaction.
         """
-        assert(isinstance(amount, Wad))
-        return Transact(self, self.web3, self.abi, self.address, self._contract, 'burn(uint256)', [amount.value])
+        assert(isinstance(amount, big_number_utils.Wad))
+        return transact_utils.Transact(self, self.web3, self.abi, self.address, self._contract, 'burn(uint256)', [amount.value])
 
-    def burn_from(self, address: Address, amount: Wad) -> Transact:
+    def burn_from(self, address: address_utils.Address, amount: big_number_utils.Wad) -> 'transact_utils.Transact':
         """Decrease the total supply of the token.
 
         Args:
@@ -280,10 +289,10 @@ class DSToken(ERC20Token):
             amount: The amount to decrease the total supply by.
 
         Returns:
-            A :py:class:`pymaker.Transact` instance, which can be used to trigger the transaction.
+            A :py:class:`transact_utils.Transact` instance, which can be used to trigger the transaction.
         """
-        assert(isinstance(amount, Wad))
-        return Transact(self, self.web3, self.abi, self.address, self._contract, 'burn(address,uint256)', [address.address,
+        assert(isinstance(amount, big_number_utils.Wad))
+        return transact_utils.Transact(self, self.web3, self.abi, self.address, self._contract, 'burn(address,uint256)', [address.address,
                                                                                                            amount.value])
 
     def __repr__(self):
@@ -305,8 +314,8 @@ class DSEthToken(ERC20Token):
         address: Ethereum address of the `DSEthToken` contract.
     """
 
-    abi = Contract._load_abi(__name__, 'abi/DSEthToken.abi')
-    bin = Contract._load_bin(__name__, 'abi/DSEthToken.bin')
+    abi = contract_utils.Contract._load_abi(__name__, 'abi/DSEthToken.abi')
+    bin = contract_utils.Contract._load_bin(__name__, 'abi/DSEthToken.bin')
 
     @staticmethod
     def deploy(web3: Web3):
@@ -318,25 +327,25 @@ class DSEthToken(ERC20Token):
         Returns:
             A `DSEthToken` class instance.
         """
-        return DSEthToken(web3=web3, address=Contract._deploy(web3, DSEthToken.abi, DSEthToken.bin, []))
+        return DSEthToken(web3=web3, address=contract_utils.Contract._deploy(web3, DSEthToken.abi, DSEthToken.bin, []))
 
     def __init__(self, web3, address):
         super().__init__(web3, address)
         self._contract = self._get_contract(web3, self.abi, address)
 
-    def deposit(self, amount: Wad) -> Transact:
+    def deposit(self, amount: big_number_utils.Wad) -> 'transact_utils.Transact':
         """Deposits `amount` of raw ETH to `DSEthToken`.
 
         Args:
             amount: Amount of raw ETH to be deposited to `DSEthToken`.
 
         Returns:
-            A :py:class:`pymaker.Transact` instance, which can be used to trigger the transaction.
+            A :py:class:`transact_utils.Transact` instance, which can be used to trigger the transaction.
         """
-        assert(isinstance(amount, Wad))
-        return Transact(self, self.web3, self.abi, self.address, self._contract, 'deposit', [], {'value': amount.value})
+        assert(isinstance(amount, big_number_utils.Wad))
+        return transact_utils.Transact(self, self.web3, self.abi, self.address, self._contract, 'deposit', [], {'value': amount.value})
 
-    def withdraw(self, amount: Wad) -> Transact:
+    def withdraw(self, amount: big_number_utils.Wad) -> 'transact_utils.Transact':
         """Withdraws `amount` of raw ETH from `DSEthToken`.
 
         The withdrawn ETH will get transferred to the calling account.
@@ -345,10 +354,10 @@ class DSEthToken(ERC20Token):
             amount: Amount of raw ETH to be withdrawn from `DSEthToken`.
 
         Returns:
-            A :py:class:`pymaker.Transact` instance, which can be used to trigger the transaction.
+            A :py:class:`transact_utils.Transact` instance, which can be used to trigger the transaction.
         """
-        assert(isinstance(amount, Wad))
-        return Transact(self, self.web3, self.abi, self.address, self._contract, 'withdraw', [amount.value])
+        assert(isinstance(amount, big_number_utils.Wad))
+        return transact_utils.Transact(self, self.web3, self.abi, self.address, self._contract, 'withdraw', [amount.value])
 
     def __repr__(self):
         return f"DSEthToken('{self.address}')"
@@ -362,9 +371,9 @@ class EthToken():
          address: Ethereum address of the original ETH token.
     """
 
-    def __init__(self, web3: Web3, address: Address):
+    def __init__(self, web3: Web3, address: address_utils.Address):
         assert(isinstance(web3, Web3))
-        assert(isinstance(address, Address))
+        assert(isinstance(address, address_utils.Address))
 
         self.web3 = web3
         self.address = address
@@ -378,6 +387,6 @@ class EthToken():
          Returns:
              The ETH balance of the address specified.
          """
-        assert(isinstance(address, Address))
+        assert(isinstance(address, address_utils.Address))
 
-        return Wad(self.web3.eth.getBalance(address.address))
+        return big_number_utils.Wad(self.web3.eth.getBalance(address.address))

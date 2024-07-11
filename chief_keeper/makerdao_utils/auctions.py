@@ -18,7 +18,7 @@
 from datetime import datetime
 import logging
 from pprint import pformat
-from typing import List
+from typing import List, Tuple
 from web3 import Web3
 
 from web3._utils.events import get_event_data
@@ -33,8 +33,7 @@ from chief_keeper.utils.big_number import Wad, Rad, Ray
 
 from chief_keeper.makerdao_utils.dss import Dog, Vat
 from chief_keeper.makerdao_utils.token import ERC20Token
-
-from pymaker.logging import LogNote
+from chief_keeper.makerdao_utils.logging import LogNote
 
 
 
@@ -787,7 +786,7 @@ class Clipper(AuctionContract):
         """Number of active and redoable auctions."""
         return int(self._contract.functions.count().call())
 
-    def status(self, id: int) -> (bool, Ray, Wad, Rad):
+    def status(self, id: int) -> Tuple[bool, Ray, Wad, Rad]:
         """Indicates current state of the auction
         Args:
             id: Auction identifier.

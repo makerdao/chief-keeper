@@ -17,12 +17,15 @@
 
 from hexbytes import HexBytes
 from web3._utils.events import get_event_data
+from web3.exceptions import LogTopicError
 
 from eth_abi.codec import ABICodec
 from eth_abi.registry import registry as default_registry
 
-from chief_keeper.utils.address import Address
-from chief_keeper.utils.big_number import Wad
+import chief_keeper.makerdao_utils.token as token_utils
+import chief_keeper.utils.address as address_utils
+import chief_keeper.utils.big_number as big_number_utils
+import chief_keeper.utils.transfer as transfer_utils
 
 class Receipt:
     """Represents a receipt for an Ethereum transaction.
@@ -55,15 +58,14 @@ class Receipt:
                     # $ seth keccak $(seth --from-ascii "Transfer(address,address,uint256)")
                     # 0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef
                     if receipt_log['topics'][0] == HexBytes('0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef'):
-                        from pymaker.token import ERC20Token
-                        transfer_abi = [abi for abi in ERC20Token.abi if abi.get('name') == 'Transfer'][0]
+                        transfer_abi = [abi for abi in token_utils.ERC20Token.abi if abi.get('name') == 'Transfer'][0]
                         codec = ABICodec(default_registry)
                         try:
                             event_data = get_event_data(codec, transfer_abi, receipt_log)
-                            self.transfers.append(Transfer(token_address=Address(event_data['address']),
-                                                           from_address=Address(event_data['args']['from']),
-                                                           to_address=Address(event_data['args']['to']),
-                                                           value=Wad(event_data['args']['value'])))
+                            self.transfers.append(transfer_utils.Transfer(token_address=address_utils.Address(event_data['address']),
+                                                           from_address=address_utils.Address(event_data['args']['from']),
+                                                           to_address=address_utils.Address(event_data['args']['to']),
+                                                           value=big_number_utils.Wad(event_data['args']['value'])))
                         # UniV3 Mint logIndex: 3 has an NFT mint of 1, from null, to a given address, but only 2 types (address, address)
                         except LogTopicError:
                             continue
@@ -71,26 +73,24 @@ class Receipt:
                     # $ seth keccak $(seth --from-ascii "Mint(address,uint256)")
                     # 0x0f6798a560793a54c3bcfe86a93cde1e73087d944c0ea20544137d4121396885
                     if receipt_log['topics'][0] == HexBytes('0x0f6798a560793a54c3bcfe86a93cde1e73087d944c0ea20544137d4121396885'):
-                        from pymaker.token import DSToken
-                        transfer_abi = [abi for abi in DSToken.abi if abi.get('name') == 'Mint'][0]
+                        transfer_abi = [abi for abi in token_utils.DSToken.abi if abi.get('name') == 'Mint'][0]
                         codec = ABICodec(default_registry)
                         event_data = get_event_data(codec, transfer_abi, receipt_log)
-                        self.transfers.append(Transfer(token_address=Address(event_data['address']),
-                                                       from_address=Address('0x0000000000000000000000000000000000000000'),
-                                                       to_address=Address(event_data['args']['guy']),
-                                                       value=Wad(event_data['args']['wad'])))
+                        self.transfers.append(transfer_utils.Transfer(token_address=address_utils.Address(event_data['address']),
+                                                       from_address=address_utils.Address('0x0000000000000000000000000000000000000000'),
+                                                       to_address=address_utils.Address(event_data['args']['guy']),
+                                                       value=big_number_utils.Wad(event_data['args']['wad'])))
 
                     # $ seth keccak $(seth --from-ascii "Burn(address,uint256)")
                     # 0xcc16f5dbb4873280815c1ee09dbd06736cffcc184412cf7a71a0fdb75d397ca5
                     if receipt_log['topics'][0] == HexBytes('0xcc16f5dbb4873280815c1ee09dbd06736cffcc184412cf7a71a0fdb75d397ca5'):
-                        from pymaker.token import DSToken
-                        transfer_abi = [abi for abi in DSToken.abi if abi.get('name') == 'Burn'][0]
+                        transfer_abi = [abi for abi in token_utils.DSToken.abi if abi.get('name') == 'Burn'][0]
                         codec = ABICodec(default_registry)
                         event_data = get_event_data(codec, transfer_abi, receipt_log)
-                        self.transfers.append(Transfer(token_address=Address(event_data['address']),
-                                                       from_address=Address(event_data['args']['guy']),
-                                                       to_address=Address('0x0000000000000000000000000000000000000000'),
-                                                       value=Wad(event_data['args']['wad'])))
+                        self.transfers.append(transfer_utils.Transfer(token_address=address_utils.Address(event_data['address']),
+                                                       from_address=address_utils.Address(event_data['args']['guy']),
+                                                       to_address=address_utils.Address('0x0000000000000000000000000000000000000000'),
+                                                       value=big_number_utils.Wad(event_data['args']['wad'])))
 
         else:
             self.successful = False

@@ -14,8 +14,8 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
-from typing import List, Optional
 
+from typing import List, Optional, Tuple
 from hexbytes import HexBytes
 from web3 import Web3
 from web3._utils.events import get_event_data
@@ -133,7 +133,7 @@ class DSProxy(Contract):
         return Transact(self, self.web3, self.abi, self.address, self._contract,
                         'execute(bytes,bytes)', [b32_code, calldata.as_bytes()])
 
-    def call(self, code: str, calldata: Calldata) -> (Address, HexBytes):
+    def call(self, code: str, calldata: Calldata) -> Tuple[Address, HexBytes]:
         assert (isinstance(code, str))
         assert (isinstance(calldata, Calldata))
 

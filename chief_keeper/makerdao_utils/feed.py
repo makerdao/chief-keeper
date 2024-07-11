@@ -20,8 +20,8 @@ from web3 import Web3
 from chief_keeper.utils.address import Address
 from chief_keeper.utils.contract import Contract
 from chief_keeper.utils.transact import Transact
-from pymaker.auth import DSAuth
 
+from chief_keeper.makerdao_utils.auth import DSAuth
 
 class DSValue(DSAuth):
     """A client for the `DSValue` contract, a single-value data feed.

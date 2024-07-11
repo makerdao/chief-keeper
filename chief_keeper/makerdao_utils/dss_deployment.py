@@ -18,9 +18,8 @@
 import json
 import os
 import re
+
 from typing import Dict, List, Optional
-
-
 from web3 import Web3
 
 from chief_keeper.utils.address import Address
@@ -30,16 +29,13 @@ from chief_keeper.makerdao_utils.dss import Cat, Dog, Jug, Pot, Spotter, TokenFa
 from chief_keeper.makerdao_utils.collateral import Collateral
 from chief_keeper.makerdao_utils.join import DaiJoin, GemJoin, GemJoin5
 from chief_keeper.makerdao_utils.proxy import ProxyRegistry, DssProxyActionsDsr
-
 from chief_keeper.makerdao_utils.feed import DSValue
 from chief_keeper.makerdao_utils.governance import DSPause, DSChief
 from chief_keeper.makerdao_utils.token import DSToken, DSEthToken
-
-from pymaker.oracles import OSM
-from pymaker.shutdown import ShutdownModule, End
-
-from pymaker.cdpmanager import CdpManager
-from pymaker.dsrmanager import DsrManager
+from chief_keeper.makerdao_utils.oracles import OSM
+from chief_keeper.makerdao_utils.shutdown import ShutdownModule, End
+from chief_keeper.makerdao_utils.cdp_manager import CdpManager
+from chief_keeper.makerdao_utils.dsr_manager import DsrManager
 
 class DssDeployment:
     """Represents a Dai Stablecoin System deployment for multi-collateral Dai (MCD).
@@ -156,7 +152,7 @@ class DssDeployment:
                                         dsr_manager, faucet, collaterals)
 
         @staticmethod
-        def _infer_collaterals_from_addresses(keys: []) -> List:
+        def _infer_collaterals_from_addresses(keys: List[str]) -> List:
             collaterals = []
             for key in keys:
                 match = re.search(r'MCD_[CF]LIP_(?!CALC)((\w+)_\w+)', key)
