@@ -31,7 +31,6 @@ podAnnotations:
   reloader.stakater.com/auto: "true"
 resources:
   limits:
-    cpu: 750m
     memory: 512Mi
   requests:
     cpu: 500m
