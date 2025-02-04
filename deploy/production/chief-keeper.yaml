@@ -21,6 +21,15 @@ deployment:
         provisioningMode: efs-ap
         fileSystemId: fs-01b6896d4c2a6deb6
         directoryPerms: "700"
+affinity:
+  nodeAffinity:
+    requiredDuringSchedulingIgnoredDuringExecution:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: karpenter.sh/capacity-type
+          operator: In
+          values:
+          - on-demand
 image:
   pullPolicy: Always
 serviceAccount:
