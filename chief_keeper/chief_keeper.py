@@ -30,6 +30,14 @@ from urllib.parse import urlparse
 
 from chief_keeper.database import SimpleDatabase
 from chief_keeper.spell import DSSSpell
+from chief_keeper.metrics import (
+    MetricsServer, 
+    record_new_hat_event, 
+    set_hat_validity, 
+    record_schedule_called, 
+    record_lift_called, 
+    record_invalid_lift_called
+)
 
 from pymaker import Address, web3_via_http
 from pymaker.util import is_contract_at
@@ -130,6 +138,10 @@ class ChiefKeeper:
         self.errors = 0
 
         self.confirmations = 0
+        
+        # Start the metrics server
+        self.metrics_server = MetricsServer()
+        self.metrics_server.start()
 
     def print_arguments(self):
         """Print all the arguments passed to the script."""
@@ -286,6 +298,10 @@ class ChiefKeeper:
         hat = self.dss.ds_chief.get_hat().address
         hatApprovals = self.dss.ds_chief.get_approvals(hat)
 
+        # Check if hat is valid (has approvals)
+        is_valid_hat = hatApprovals > 0
+        set_hat_validity(is_valid_hat, hat)
+        
         contender, highestApprovals = hat, hatApprovals
 
         gas_strategy = GeometricGasPrice(
@@ -305,9 +321,21 @@ class ChiefKeeper:
             self.logger.info(f"Lifting hat")
             self.logger.info(f"Old hat ({hat}) with Approvals {hatApprovals}")
             self.logger.info(f"New hat ({contender}) with Approvals {highestApprovals}")
-            self.dss.ds_chief.lift(Address(contender)).transact(
-                gas_strategy=gas_strategy
-            )
+            
+            # Record lift attempt
+            record_lift_called(hat, contender)
+            
+            try:
+                self.dss.ds_chief.lift(Address(contender)).transact(
+                    gas_strategy=gas_strategy
+                )
+                # Record successful hat change
+                record_new_hat_event(hat, contender)
+            except Exception as e:
+                # Record invalid lift attempt
+                record_invalid_lift_called(hat, contender)
+                self.logger.error(f"Error lifting hat: {e}")
+                raise
         else:
             self.logger.info(f"Current hat ({hat}) with Approvals {hatApprovals}")
 
@@ -327,6 +355,10 @@ class ChiefKeeper:
             # Functional with DSSSpells but not DSSpells (not compatiable with DSPause)
             if spell.done() == False and self.database.get_eta_inUnix(spell) == 0:
                 self.logger.info(f"Scheduling spell ({yay})")
+                
+                # Record schedule attempt
+                record_schedule_called(yay)
+                
                 spell.schedule().transact(gas_strategy=gas_strategy)
         else:
             self.logger.warning(
