@@ -299,7 +299,7 @@ class ChiefKeeper:
         hatApprovals = self.dss.ds_chief.get_approvals(hat)
 
         # Check if hat is valid (has approvals)
-        is_valid_hat = hatApprovals > 0
+        is_valid_hat = float(hatApprovals) > 0
         set_hat_validity(is_valid_hat, hat)
         
         contender, highestApprovals = hat, hatApprovals
