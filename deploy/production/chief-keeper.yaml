@@ -6,6 +6,11 @@ service:
   containerPort: 8080
   tls:
     enabled: false
+  # Add metrics port for Prometheus
+  metrics:
+    name: metrics
+    port: 9090
+    containerPort: 9090
 deployment:
   enabled: true
   volumes:
@@ -19,7 +24,7 @@ deployment:
           storage: 5Gi
       parameters:
         provisioningMode: efs-ap
-        fileSystemId: fs-01b6896d4c2a6deb6
+        fileSystemId: fs-05ba801792d47007f
         directoryPerms: "700"
 affinity:
   nodeAffinity:
@@ -38,6 +43,10 @@ ingress:
   enabled: false
 podAnnotations:
   reloader.stakater.com/auto: "true"
+  # Add Prometheus scraping annotations
+  prometheus.io/scrape: "true"
+  prometheus.io/port: "9090"
+  prometheus.io/path: "/metrics"
 resources:
   limits:
     memory: 512Mi
@@ -47,6 +56,10 @@ resources:
 autoscaling:
   enabled: false
 env:
+  # Add metrics port environment variable
+  METRICS_PORT:
+    type: kv
+    value: "9090"
   PRIMARY_ETH_RPC_HOST:
     type: parameterStore
     name: primary-eth-rpc-host
@@ -67,7 +80,7 @@ env:
   ETH_FROM_ADDRESS:
     type: parameterStore
     name: eth-from-addr-mainnet
-    parameter_name: /eks/maker-prod/chief-keeper/eth-from-addr-mainnet
+    parameter_name: /eks/maker-prod/chief-keeper-new/eth-from-addr-mainnet
   SECRET_KEY:
     type: parameterStore
     name: secret-key-mainnet

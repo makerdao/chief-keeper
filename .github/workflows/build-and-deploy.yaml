@@ -3,7 +3,7 @@ name: Build Docker image and deploy it to Kubernetes cluster
 on:
   push:
     branches:
-      - master
+      - feat-chief-keeper-3.0
 
 permissions:
   id-token: write
@@ -51,9 +51,9 @@ jobs:
         cluster-name: ${{ env.CLUSTER_NAME }}
         config-files: deploy/production/chief-keeper.yaml
         chart-path: techops-services/common
-        namespace: keepers
+        namespace: chief-keeper
         timeout: 5m0s
-        name: chief-keeper
+        name: chief-keeper-new
         chart-repository: https://techops-services.github.io/helm-charts
         version: 0.0.14
         atomic: true
