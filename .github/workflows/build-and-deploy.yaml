@@ -18,7 +18,7 @@ jobs:
       AWS_REGION: us-east-1
       CLUSTER_NAME: maker-prod
       DOCKER_IMAGE_REGISTRY: makerdao/chief-keeper
-      DOCKER_IMAGE_TAG: latest
+      DOCKER_IMAGE_TAG: new
 
     steps:
     - name: Checkout
