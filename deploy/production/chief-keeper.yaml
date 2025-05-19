@@ -6,6 +6,11 @@ service:
   containerPort: 8080
   tls:
     enabled: false
+  # Add metrics port for Prometheus
+  metrics:
+    name: metrics
+    port: 9090
+    containerPort: 9090
 deployment:
   enabled: true
   volumes:
@@ -38,6 +43,10 @@ ingress:
   enabled: false
 podAnnotations:
   reloader.stakater.com/auto: "true"
+  # Add Prometheus scraping annotations
+  prometheus.io/scrape: "true"
+  prometheus.io/port: "9090"
+  prometheus.io/path: "/metrics"
 resources:
   limits:
     memory: 512Mi
@@ -47,6 +56,10 @@ resources:
 autoscaling:
   enabled: false
 env:
+  # Add metrics port environment variable
+  METRICS_PORT:
+    type: kv
+    value: "9090"
   PRIMARY_ETH_RPC_HOST:
     type: parameterStore
     name: primary-eth-rpc-host
