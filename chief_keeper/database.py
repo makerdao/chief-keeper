@@ -111,13 +111,18 @@ class SimpleDatabase:
     def get_yays(self, beginBlock: int, endBlock: int):
         """Get all `etched` yays within a given block range"""
         etches = self.dss.ds_chief.past_etch_in_range(beginBlock, endBlock)
-        maxYays = self.dss.ds_chief.get_max_yays()
-
+        
         yays = []
         for etch in etches:
-            yays = yays + self.unpack_slate(etch.slate, maxYays)
-
-        return yays if not None else []
+            if hasattr(etch, 'yays') and etch.yays:
+                # Use direct yays extraction (new method)
+                yays.extend(etch.yays)
+            else:
+                # Fallback to slate unpacking (old method)
+                maxYays = self.dss.ds_chief.get_max_yays()
+                yays.extend(self.unpack_slate(etch.slate, maxYays))
+        
+        return yays
 
     def unpack_slate(self, slate, maxYays: int) -> List:
         """Unpack the slate into its yay constituents"""
