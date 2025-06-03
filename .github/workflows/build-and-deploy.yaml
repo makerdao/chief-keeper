@@ -3,7 +3,7 @@ name: Build Docker image and deploy it to Kubernetes cluster
 on:
   push:
     branches:
-      - feat-chief-keeper-3.0
+      - master
 
 permissions:
   id-token: write
