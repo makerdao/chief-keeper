@@ -1,4 +1,4 @@
 [submodule "lib/pymaker"]
 	path = lib/pymaker
 	url = https://github.com/makerdao/pymaker
-	branch = EIP-1559
+	branch = feat-chief-keeper-3.0
